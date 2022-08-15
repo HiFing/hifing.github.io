@@ -61,6 +61,48 @@ categories:
   }
 ```
 
+关联题：[最长回文子串](https://leetcode.cn/problems/longest-palindromic-substring/) （也可使用中心扩展的方法获取，要分奇偶两种情况）
+
+> ```java
+> class Solution {
+>   char[] seq;
+> 
+>   private int findLength(int start, boolean flag) {
+>     int left = start - (flag ? 1 : 0);
+>     int right = start;
+>     int length = (left == right ? -1 : 0);
+>     while (left >= 0 && right < seq.length) {
+>       if (seq[left] == seq[right]) {
+>         length += 2;
+>         left--;
+>         right++;
+>       } else
+>         break;
+>     }
+>     return length;
+>   }
+> 
+>   public String longestPalindrome(String s) {
+>     seq = s.toCharArray();
+>     int nowMax = 0;
+>     int index = 0;
+>     for (int i = 0; i < seq.length; i++) {
+>       int singled = findLength(i, true);
+>       int doubled = findLength(i, false);
+>       if (singled > nowMax) {
+>         index = i;
+>         nowMax = singled;
+>       }
+>       if (doubled > nowMax) {
+>         index = i;
+>         nowMax = doubled;
+>       }
+>     }
+>     return s.substring(index - (nowMax / 2), index - (nowMax / 2) + nowMax);
+>   }
+> }
+> ```
+
 ## 矩阵
 
 ### [矩阵中的距离](https://leetcode.cn/problems/2bCMpM/)

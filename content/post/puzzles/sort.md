@@ -18,10 +18,41 @@ categories:
 ### 模板题
 
 ```java
-...
+class Solution {
+  private void swap(int[] nums, int a, int b) {
+    int tmp = nums[a];
+    nums[a] = nums[b];
+    nums[b] = tmp;
+  }
+
+  private void fastSort(int[] nums, int l, int r) {
+    if (l >= r)
+      return;
+    // 也可以直接认定pivot为左端点
+    int start = l, end = r;
+    swap(nums, start, (start + end) / 2);
+    // 指针重合时退出
+    while (start < end) {
+      // 先动右指针，避免指针重复时左指针指向超过pivot的数字
+      while (start < end && nums[end] >= nums[l])
+        end--;
+      while (start < end && nums[start] <= nums[l])
+        start++;
+      swap(nums, start, end);
+    }
+    // 交换左指针和pivot的位置
+    swap(nums, l, start);
+
+    fastSort(nums, l, start - 1);
+    fastSort(nums, start + 1, r);
+  }
+
+  public int[] sortArray(int[] nums) {
+    fastSort(nums, 0, nums.length - 1);
+    return nums;
+  }
+}
 ```
-
-
 
 ### [出现频率最高的 k 个数字](https://leetcode.cn/problems/g5c51o/)(TOPK)
 
