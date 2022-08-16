@@ -77,3 +77,72 @@ class Solution {
   }
 }
 ```
+
+### [接雨水](https://leetcode.cn/problems/trapping-rain-water/)
+
+```java
+//单调栈做法
+public int trap(int[] height) {
+  int res = 0;
+  Stack<Integer> stk = new Stack<>();
+  for (int i = 0; i < height.length; i++) {
+    while (!stk.isEmpty()) {
+      if (height[i] < height[stk.peek()])
+        break;
+      int index = stk.pop();
+      if (stk.isEmpty())
+        break;
+      int minHeight = Math.min(height[i], height[stk.peek()]);
+      res += (minHeight - height[index]) * (i - stk.peek() - 1);
+    }
+    stk.add(i);
+  }
+  return res;
+}
+```
+
+```java
+//双指针做法
+class Solution {
+  public int trap(int[] height) {
+    int res = 0;
+    int left = 0, right = height.length - 1;
+    int leftMax = height[left], rightMax = height[right];
+    while (left <= right) {
+      while (leftMax <= rightMax && left <= right) {
+        if (height[left] > leftMax) {
+          leftMax = height[left];
+        } else {
+          res += (leftMax - height[left]);
+        }
+        left++;
+      }
+      while (leftMax > rightMax && left <= right) {
+        if (height[right] > rightMax) {
+          rightMax = height[right];
+        } else {
+          res += (rightMax - height[right]);
+        }
+        right--;
+      }
+    }
+    return res;
+  }
+}
+
+//稍微优雅一些的写法
+public int trap(int[] height) {
+  int res = 0;
+  int left = 0, leftMax = height[left], right = height.length - 1, rightMax = height[right];
+  while (left <= right) {
+    leftMax = Math.max(leftMax, height[left]);
+    rightMax = Math.max(rightMax, height[right]);
+    if (leftMax > rightMax)
+      res += rightMax - height[right--];
+    else
+      res += leftMax - height[left++];
+  }
+  return res;
+}
+```
+

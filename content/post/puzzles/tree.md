@@ -104,3 +104,27 @@ class Solution {
 ```
 
 ![](../../assets/img/Snipaste_2022-08-15_23-55-43.png)
+
+### [二叉树中的最大路径和](https://leetcode.cn/problems/binary-tree-maximum-path-sum/)
+
+```java
+final int minimum = -1000;
+int res = minimum;
+
+public int search(TreeNode root) {
+  if (root == null)
+    return minimum;
+  int left = search(root.left);
+  int right = search(root.right);
+  int maximumCombine = Math.max(0, Math.max(left, right)) + root.val;
+  res = Math.max(res, Math.max(maximumCombine, left + right + root.val));
+  return maximumCombine;
+}
+
+public int maxPathSum(TreeNode root) {
+  search(root);
+  return res;
+}
+```
+
+更新res的时候有多种情况。返回上层时要确保root在计算结果中，以便上层能够连接子树结果。
