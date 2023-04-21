@@ -125,8 +125,118 @@ class Solution {
 
 找到两个数组的index，使得这两个index左侧的数都小于右侧的数。最终结果根据奇偶性分开处理。
 
+### [在排序数组中查找元素的第一个和最后一个位置](https://leetcode.cn/problems/find-first-and-last-position-of-element-in-sorted-array/)
+
+```java
+class Solution {
+  public int[] searchRange(int[] nums, int target) {
+    if (nums.length == 0) return new int[]{ -1, -1 };
+    int l = 0, r = nums.length - 1;
+    while (l < r) {
+      // 位运算优先级低，要用括号包起来
+      int mid = l + ((r - l) >> 1);
+      if (nums[mid] >= target)
+        r = mid;
+      else
+        l = mid + 1;
+    }
+    int low = -1;
+    if (nums[l] == target)
+      low = l;
+    l = 0;
+    r = nums.length - 1;
+    while (l < r) {
+      // 补一个1，让mid倾向于右边的元素
+      int mid = l + ((r - l + 1) >> 1);
+      if (nums[mid] > target)
+        r = mid - 1;
+      else
+        l = mid;
+    }
+    int high = -1;
+    if (nums[l] == target)
+      high = l;
+    return new int[] { low, high };
+  }
+}
+```
+
 ## 并查集
 
 ### [最大人工岛](https://leetcode.cn/problems/making-a-large-island/)
 
 先dfs把独立块的大小都计算出来存下来，再计算翻转每个0的时候能获得的联合块的大小。
+
+```java
+// 一种省事一些的并查集方法
+// 还没有编写反转0之后的逻辑
+public class Main {
+  int[] dr = new int[] { -1, 0, 1, 0 };
+  int[] dc = new int[] { 0, -1, 0, 1 };
+  int[][] grid;
+  boolean[][] chk;
+  int[] father;
+  int m;
+  int n;
+
+  public int maxAreaOfIsland(int[][] grid) {
+    this.grid = grid;
+    m = grid.length;
+    n = grid[0].length;
+    chk = new boolean[m][n];
+    father = new int[m * n];
+    Arrays.fill(father, -1);
+    int result = 0;
+    for (int i = 0; i < m; i++) {
+      for (int j = 0; j < n; j++) {
+        if (grid[i][j] == 0 || chk[i][j])
+          continue;
+        int myIndex = i * n + j;
+        // 携带father下标传下去，dfs过程中，扫到的下标都会变成这个下标
+        int res = dfs(i, j, myIndex);
+        father[myIndex] = -1 * res;
+        result = Math.max(result, res);
+      }
+    }
+    return result;
+  }
+
+  public int dfs(int i, int j, int index) {
+    if (i < 0 || i >= m || j < 0 || j >= n || chk[i][j] || grid[i][j] == 0)
+      return 0;
+    int res = 1;
+    int myIndex = i * n + j;
+    father[myIndex] = index;
+    chk[i][j] = true;
+    for (int k = 0; k < 4; k++) {
+      res += dfs(i + dr[k], j + dc[k], index);
+    }
+    return res;
+  }
+```
+
+
+
+## 二维查找
+
+### [搜索二维矩阵 II](https://leetcode.cn/problems/search-a-2d-matrix-ii/)
+
+```java
+public boolean searchMatrix(int[][] matrix, int target) {
+  int x = matrix[0].length - 1;
+  int y = 0;
+  while (y < matrix.length && x >= 0) {
+    if (matrix[y][x] == target)
+      return true;
+    else if (matrix[y][x] > target)
+      x--;
+    else
+      y++;
+  }
+  return false;
+}
+```
+
+Z字形搜索，控制一个方向为增大，一个方向为减小，这样就不用考虑两个方向同为增大而进行分类讨论了。
+
+也可以逐行进行二分查找。

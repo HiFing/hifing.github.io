@@ -9,7 +9,7 @@ categories:
 
 # 动态规划
 
-## 回文字串
+## 串
 
 ### [回文子字符串的个数](https://leetcode.cn/problems/a7VOhD/)
 
@@ -103,6 +103,28 @@ categories:
 > }
 > ```
 
+### [最长公共子序列](https://leetcode.cn/problems/longest-common-subsequence/)
+
+```java
+class Solution {
+  public int longestCommonSubsequence(String text1, String text2) {
+    char[] s1, s2;
+    s1 = text1.toCharArray();
+    s2 = text2.toCharArray();
+    int[][] dp = new int[s1.length + 1][s2.length + 1];
+    for (int i = 1; i <= s1.length; i++) {
+      for (int j = 1; j <= s2.length; j++) {
+        dp[i][j] = Math.max(dp[i][j - 1], dp[i - 1][j]);
+        dp[i][j] = Math.max(dp[i][j], dp[i - 1][j - 1] + (s1[i - 1] == s2[j - 1] ? 1 : 0));
+      }
+    }
+    return dp[s1.length][s2.length];
+  }
+}
+```
+
+处理i、j处的时候，分三种情况讨论，（i，j-1），（i-1，j），（i-1，j-1）
+
 ## 矩阵
 
 ### [矩阵中的距离](https://leetcode.cn/problems/2bCMpM/)
@@ -190,5 +212,113 @@ class Solution {
     }
     return dp[amount] == Integer.MAX_VALUE ? -1 : dp[amount];
   }
+```
+
+### 背包变体：[剑指 Offer II 102. 加减的目标值](https://leetcode.cn/problems/YaVDxD/)
+
+```java
+class Solution {
+  public int findTargetSumWays(int[] nums, int target) {
+    int sum = 0;
+    for (int ele : nums)
+      sum += ele;
+    if (target > sum || target < sum * -1)
+      return 0;
+    int[][] dp = new int[nums.length + 1][sum * 2 + 1];
+    dp[0][sum] = 1;
+    for (int i = 1; i <= nums.length; i++) {
+      for (int j = 0; j < sum * 2 + 1; j++) {
+        int tmp = 0;
+        // nums[i - 1]为当前元素
+        if (j - nums[i - 1] >= 0)
+          tmp += dp[i - 1][j - nums[i - 1]];
+        if (j + nums[i - 1] < sum * 2 + 1)
+          tmp += dp[i - 1][j + nums[i - 1]];
+        dp[i][j] = tmp;
+      }
+    }
+    return dp[nums.length][target + sum];
+  }
+}
+
+//优化：只考虑正或负
+class Solution {
+  public int findTargetSumWays(int[] nums, int target) {
+    int sum = 0;
+    for (int ele : nums)
+      sum += ele;
+    if (target > sum || target < sum * -1 || (target + sum) % 2 == 1)
+      return 0;
+
+    int pos = (target + sum) / 2;
+    int[][] dp = new int[nums.length + 1][pos + 1];
+    dp[0][0] = 1;
+
+    for (int i = 1; i <= nums.length; i++) {
+      for (int j = 0; j < pos + 1; j++) {
+        dp[i][j] += dp[i - 1][j];
+        if (j - nums[i - 1] >= 0) {
+          dp[i][j] += dp[i - 1][j - nums[i - 1]];
+        }
+      }
+    }
+    return dp[nums.length][pos];
+  }
+}
+```
+
+关联题目：[416. 分割等和子集](https://leetcode.cn/problems/partition-equal-subset-sum/)
+
+## 少状态DP
+
+### [买卖股票的最佳时机 II](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii)
+
+```java
+public int maxProfit(int[] prices) {
+  int[] buy = new int[prices.length];
+  int[] sell = new int[prices.length];
+  buy[0] = -1 * prices[0];
+  sell[0] = 0;
+  for (int i = 1; i < prices.length; i++) {
+    buy[i] = Math.max(sell[i - 1] - prices[i], buy[i - 1]);
+    sell[i] = Math.max(sell[i - 1], buy[i - 1] + prices[i]);
+  }
+  return sell[prices.length - 1];
+}
+```
+
+两个状态，持有股票和不持有股票
+
+### [乘积最大子数组](https://leetcode.cn/problems/maximum-product-subarray/)
+
+```java
+class Solution {
+  public int maxProduct(int[] nums) {
+    int positiveMax = 0;
+    int negativeMax = 0;
+    int maximun = nums[0];
+    int tmp = 0;
+    if (maximun > 0)
+      positiveMax = maximun;
+    else
+      negativeMax = maximun;
+    for (int i = 1; i < nums.length; i++) {
+      if (nums[i] > 0) {
+        negativeMax = negativeMax * nums[i];
+        positiveMax = Math.max(positiveMax * nums[i], nums[i]);
+      } else if (nums[i] < 0) {
+        tmp = negativeMax * nums[i];
+        negativeMax = Math.min(positiveMax * nums[i], nums[i]);
+        positiveMax = tmp;
+      }
+      else {
+        negativeMax = 0;
+        positiveMax = 0;
+      }
+      maximun = Math.max(maximun, positiveMax);
+    }
+    return maximun;
+  }
+}
 ```
 

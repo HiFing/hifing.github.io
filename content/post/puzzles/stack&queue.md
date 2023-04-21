@@ -1,5 +1,5 @@
 ---
-title: "栈"
+title: "栈与队列"
 description: 
 date: 2022-07-04T16:04:44+08:00
 image: 
@@ -11,7 +11,10 @@ draft: false
 categories:
   - 刷题
 ---
+# 栈与队列
+
 ## 单调栈
+
 ### [直方图最大矩形面积](https://leetcode.cn/problems/0ynMMM/)
 
 ![这是图片](../../assets/img/histogram.jpg)
@@ -146,3 +149,70 @@ public int trap(int[] height) {
 }
 ```
 
+## 单调队列
+
+### [滑动窗口最大值](https://leetcode.cn/problems/sliding-window-maximum/)
+
+```java
+class Solution {
+  public int[] maxSlidingWindow(int[] nums, int k) {
+    Deque<Integer> deque = new LinkedList<>();
+    List<Integer> res = new ArrayList<>();
+    int i = 0;
+    for (; i < k; i++) {
+      while (!deque.isEmpty() && deque.peekLast() < nums[i])
+        deque.pollLast();
+      deque.addLast(nums[i]);
+    }
+    res.add(deque.peekFirst());
+    for (; i < nums.length; i++) {
+      if (deque.peekFirst() == nums[i - k])
+        deque.pollFirst();
+      while (!deque.isEmpty() && deque.peekLast() < nums[i])
+        deque.pollLast();
+      deque.addLast(nums[i]);
+      res.add(deque.peekFirst());
+    }
+    int[] resArray = new int[res.size()];
+    for (int j = 0; j < res.size(); j++) {
+      resArray[j] = res.get(j);
+    }
+    return resArray;
+  }
+}
+```
+
+滑动窗口滑动的过程中势必要记录下新进来的元素，删除被挤出的元素，只不过在收入新进来的元素的时候先**保持滑动窗口中的最大值不小于这个元素**，这样一来小的元素就无需被队列记录下来了。等到这个元素出去的时候再比对队首元素与之是否相同，若相同则直接删掉就好了。遇到重复的值的时候也要记录下来，防止一个被弹出另一个不知道。
+
+## 栈
+
+### [最长有效括号](https://leetcode.cn/problems/longest-valid-parentheses/)
+
+让没有用的元素垫底作为界定标准，先弹栈再计算
+
+```java
+class Solution {
+  public int longestValidParentheses(String s) {
+    Stack<Integer> stk = new Stack<>();
+    stk.push(-1);
+    int res = 0;
+    for (int i = 0; i < s.length(); i++) {
+      if (s.charAt(i) == '(') {
+        stk.push(i);
+      } else {
+        stk.pop();
+        if (!stk.isEmpty()) {
+          res = Math.max(res, i - stk.peek());
+        } else {
+          stk.push(i);
+        }
+      }
+    }
+    return res;
+  }
+}
+```
+
+本题还可以使用DP来做，当遇到右括号的时候，记录下与之匹配的左括号的位置，倘若在这个过程中找到了之前的一个已经匹配完成的右括号，则顺着它继续往前面找，直到找到一个左括号，找不到左括号就记为0.
+
+还可以根据贪心来做，从左边开始扫描，记录下左括号数目和右括号数目，当两者相等时，记录下此时的长度，当右括号数目大一些时，清零。因为会遇到“（（）”这种情况使得算不出结果，因此需要从右往左再进行一次相对的扫描。

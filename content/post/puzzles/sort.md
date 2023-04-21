@@ -109,3 +109,46 @@ class Solution {
   }
 ```
 
+## 堆排序
+
+### [手撕堆排序](https://leetcode.cn/problems/sort-an-array)
+
+```java
+class Solution {
+  public void dropDown(int[] nums, int index, int limit) {
+    if (index * 2 + 1 >= limit)
+      return;
+    boolean flag = false;
+    int change = index;
+    if (nums[index] < nums[index * 2 + 1]) {
+      flag = true;
+      change = index * 2 + 1;
+    }
+    if (index * 2 + 2 < limit && nums[change] < nums[index * 2 + 2]) {
+      flag = true;
+      change = index * 2 + 2;
+    }
+    if (flag) {
+      int tmp = nums[change];
+      nums[change] = nums[index];
+      nums[index] = tmp;
+      dropDown(nums, change, limit);
+    }
+  }
+
+  public int[] sortArray(int[] nums) {
+    int start = (nums.length - 2) / 2;
+    for (; start >= 0; start--) {
+      dropDown(nums, start, nums.length);
+    }
+    for (int i = nums.length - 1; i > 0; i--) {
+      int tmp = nums[i];
+      nums[i] = nums[0];
+      nums[0] = tmp;
+      dropDown(nums, 0, i);
+    }
+    return nums;
+  }
+}
+```
+
