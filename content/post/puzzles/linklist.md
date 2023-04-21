@@ -113,3 +113,78 @@ public class Solution {
 ```
 
 ![](../../assets/img/IMG_1E4C2917FDD4-1.jpeg)
+
+## [LRU缓存机制](https://leetcode.cn/problems/lru-cache)
+
+使用双向链表和哈希表的方式模拟LRU
+
+```java
+class Node {
+  Node next;
+  Node prev;
+  int value;
+  int key;
+}
+
+class LRUCache {
+  int capacity;
+  Node head;
+  Node tail;
+  Map<Integer, Node> map;
+
+  public LRUCache(int capacity) {
+    this.capacity = capacity;
+    head = new Node();
+    tail = new Node();
+    head.next = tail;
+    tail.prev = head;
+    map = new HashMap<>();
+  }
+
+  // get附带更新最新节点功能
+  public int get(int key) {
+    if (map.containsKey(key)) {
+      Node target = map.get(key);
+      Node prev = target.prev;
+      Node next = target.next;
+      prev.next = next;
+      next.prev = prev;
+      Node headNext = head.next;
+      head.next = target;
+      target.prev = head;
+      headNext.prev = target;
+      target.next = headNext;
+      return target.value;
+    } else
+      return -1;
+  }
+
+  public void put(int key, int value) {
+    if (capacity <= 0)
+      return;
+    if (map.containsKey(key)) {
+      Node n = map.get(key);
+      n.value = value;
+    } else {
+      Node tmp = new Node();
+      tmp.value = value;
+      tmp.key = key;
+      if (capacity == map.size()) {
+        Node last = tail.prev;
+        map.remove(last.key);
+        last.prev.next = last.next;
+        last.next.prev = last.prev;
+      }
+      Node last = tail.prev;
+      last.next = tmp;
+      tmp.prev = last;
+      tmp.next = tail;
+      tail.prev = tmp;
+      map.put(key, tmp);
+    }
+    // 更新时调用一下get即可
+    get(key);
+  }
+}
+```
+

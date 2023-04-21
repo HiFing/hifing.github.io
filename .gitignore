@@ -1,6 +1,8 @@
 public/
 node_modules/
 resources/_gen/
+.DS_Store
 **/.DS_Store
+.DS_Store?
 tmp/
 .vscode/
