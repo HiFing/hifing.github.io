@@ -1,6 +1,6 @@
 ---
 title: "Golang"
-description: "This is an example category"
+description: "Go知识点整理"
 slug: "test"
 image: "download.jpg"
 style:

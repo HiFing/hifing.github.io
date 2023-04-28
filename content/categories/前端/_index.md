@@ -1,6 +1,6 @@
 ---
 title: "前端"
-description: "This is an example category"
+description: "前端知识点整理"
 slug: "test"
 image: "logo.png"
 style:

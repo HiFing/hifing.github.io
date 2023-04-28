@@ -1,6 +1,6 @@
 ---
 title: "MySQL"
-description: "This is an example category"
+description: "MySQL知识点整理"
 slug: "test"
 image: "OIP-C.jpg"
 style:

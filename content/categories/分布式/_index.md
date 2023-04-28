@@ -1,6 +1,6 @@
 ---
 title: "分布式"
-description: "This is an example category"
+description: "分布式知识点整理"
 slug: "test"
 image: "OIP-C.jpg"
 style:

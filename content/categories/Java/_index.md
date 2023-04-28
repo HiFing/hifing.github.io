@@ -1,6 +1,6 @@
 ---
 title: "Java"
-description: "This is an example category"
+description: "Java知识点整理"
 slug: "test"
 image: "java.jpg"
 style:

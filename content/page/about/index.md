@@ -1,5 +1,5 @@
 ---
-title: Hello
+title: 简介
 description: こんにちは
 date: "2019-02-28"
 aliases:
@@ -12,3 +12,4 @@ menu:
     params:
       icon: user
 ---
+**欢迎光临~**

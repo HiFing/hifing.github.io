@@ -8,6 +8,8 @@ license:
 hidden: false
 comments: true
 draft: false
+categories:
+  - 分布式
 ---
 
 # SpringCloud
