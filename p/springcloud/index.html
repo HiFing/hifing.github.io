@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='SpringCloud Gateway SpringCloud Gateway 使用的Webflux中的reactor-netty响应式编程组件，底层使用了Netty通讯框架。
+Gateway的使用：SpringCloud gateway
+Zuul的IO模型 Springcloud中所集成的Zuul版本，采用的是Tomcat容器，使用的是传统的Servlet IO处理模型，会为每个请求分配一个线程来处理，无法应付高并发场景下的需求，所以Springcloud Zuul 是基于servlet之上的一个阻塞式处理模型。
+Webflux 服务器 Reactive Stream 是一套反应式编程 标准 和 规范；它由发布者、订阅者、订阅、处理器组成。 Reactor 是基于 Reactive Streams 一套 反应式编程框架；Mono实现了发布者功能，返回0-1个元素，Flux返回N个元素。 WebFlux 以 Reactor 为基础，实现 Web 领域的 反应式编程框架。在 WebFlux 接口中，请求不会被阻塞，所以服务端的接口耗时为 0。 注册中心 服务注册中心本质上是为了解耦服务提供者和服务消费者。对于任何一个微服务，原则上都应存在或者支持多个提供者，这是由微服务的分布式属性决定的。更进一步，为了支持弹性扩缩容特性，一个微服务的提供者的数量和分布往往是动态变化的，也是无法预先确定的。因此，原本在单体应用阶段常用的静态LB机制就不再适用了，需要引入额外的组件来管理微服务提供者的注册与发现，而这个组件就是服务注册中心。
+需要考虑的问题：
+测活：服务注册之后，如何对服务进行测活以保证服务的可用性？ 负载均衡：当存在多个服务提供者时，如何均衡各个提供者的负载？ 集成：在服务提供端或者调用端，如何集成注册中心？ 运行时依赖：引入注册中心之后，对应用的运行时环境有何影响？ 可用性：如何保证注册中心本身的可用性，特别是消除单点故障？ CAP理论 一致性(Consistency) (所有节点在同一时间具有相同的数据) 可用性(Availability) (保证每个请求不管成功或者失败都有响应) 分隔容忍(Partition tolerance) (系统中任意信息的丢失或失败不会影响系统的继续运作) Nacos Nacos内部接收到注册的请求时，不会立即写数据，而是将服务注册的任务放入一个阻塞队列就立即响应给客户端。然后利用线程池读取阻塞队列中的任务，异步来完成实例更新，从而提高并发写能力。 Nacos在更新实例列表时，会采用CopyOnWrite技术，首先将旧的实例列表拷贝一份，然后更新拷贝的实例列表，再用更新后的实例列表来覆盖旧的实例列表。 通过Ribbon实现负载均衡。（随机、轮询、加权、少并发连接优先、重试、区域敏感、可用性敏感） vs Eureka： Nacos的实例有永久和临时实例之分；而Eureka只支持临时实例 Nacos对临时实例采用心跳模式检测，对永久实例采用主动请求来检测；Eureka只支持心跳模式 Nacos支持定时拉取和订阅推送两种模式；Eureka只支持定时拉取模式 配置中心： 一般会存：可能会经常变化的配置信息，例如连接池，日志，线程池，限流熔断规则 我们的服务一般会先从内存中读取配置信息，同时我们的微服务还可以定时向nacos配置中心发请求拉取更新的配置信息 限流 限流算法 固定窗口限流
+首先维护一个计数器，将单位时间段当做一个窗口，计数器记录这个窗口接收请求的次数。
+当次数少于限流阀值，就允许访问，并且计数器&#43;1 当次数大于限流阀值，就拒绝访问。 当前的时间窗口过去之后，计数器清零。 滑动窗口限流'><title>SpringCloud</title>
+
+<link rel='canonical' href='https://hifing.github.io/p/springcloud/'>
+
+<link rel="stylesheet" href="/scss/style.min.ac77dcf8b111b51da39a92990f431923f210f3876d85798a2125667f96dc33a4.css"><meta property='og:title' content='SpringCloud'>
+<meta property='og:description' content='SpringCloud Gateway SpringCloud Gateway 使用的Webflux中的reactor-netty响应式编程组件，底层使用了Netty通讯框架。
+Gateway的使用：SpringCloud gateway
+Zuul的IO模型 Springcloud中所集成的Zuul版本，采用的是Tomcat容器，使用的是传统的Servlet IO处理模型，会为每个请求分配一个线程来处理，无法应付高并发场景下的需求，所以Springcloud Zuul 是基于servlet之上的一个阻塞式处理模型。
+Webflux 服务器 Reactive Stream 是一套反应式编程 标准 和 规范；它由发布者、订阅者、订阅、处理器组成。 Reactor 是基于 Reactive Streams 一套 反应式编程框架；Mono实现了发布者功能，返回0-1个元素，Flux返回N个元素。 WebFlux 以 Reactor 为基础，实现 Web 领域的 反应式编程框架。在 WebFlux 接口中，请求不会被阻塞，所以服务端的接口耗时为 0。 注册中心 服务注册中心本质上是为了解耦服务提供者和服务消费者。对于任何一个微服务，原则上都应存在或者支持多个提供者，这是由微服务的分布式属性决定的。更进一步，为了支持弹性扩缩容特性，一个微服务的提供者的数量和分布往往是动态变化的，也是无法预先确定的。因此，原本在单体应用阶段常用的静态LB机制就不再适用了，需要引入额外的组件来管理微服务提供者的注册与发现，而这个组件就是服务注册中心。
+需要考虑的问题：
+测活：服务注册之后，如何对服务进行测活以保证服务的可用性？ 负载均衡：当存在多个服务提供者时，如何均衡各个提供者的负载？ 集成：在服务提供端或者调用端，如何集成注册中心？ 运行时依赖：引入注册中心之后，对应用的运行时环境有何影响？ 可用性：如何保证注册中心本身的可用性，特别是消除单点故障？ CAP理论 一致性(Consistency) (所有节点在同一时间具有相同的数据) 可用性(Availability) (保证每个请求不管成功或者失败都有响应) 分隔容忍(Partition tolerance) (系统中任意信息的丢失或失败不会影响系统的继续运作) Nacos Nacos内部接收到注册的请求时，不会立即写数据，而是将服务注册的任务放入一个阻塞队列就立即响应给客户端。然后利用线程池读取阻塞队列中的任务，异步来完成实例更新，从而提高并发写能力。 Nacos在更新实例列表时，会采用CopyOnWrite技术，首先将旧的实例列表拷贝一份，然后更新拷贝的实例列表，再用更新后的实例列表来覆盖旧的实例列表。 通过Ribbon实现负载均衡。（随机、轮询、加权、少并发连接优先、重试、区域敏感、可用性敏感） vs Eureka： Nacos的实例有永久和临时实例之分；而Eureka只支持临时实例 Nacos对临时实例采用心跳模式检测，对永久实例采用主动请求来检测；Eureka只支持心跳模式 Nacos支持定时拉取和订阅推送两种模式；Eureka只支持定时拉取模式 配置中心： 一般会存：可能会经常变化的配置信息，例如连接池，日志，线程池，限流熔断规则 我们的服务一般会先从内存中读取配置信息，同时我们的微服务还可以定时向nacos配置中心发请求拉取更新的配置信息 限流 限流算法 固定窗口限流
+首先维护一个计数器，将单位时间段当做一个窗口，计数器记录这个窗口接收请求的次数。
+当次数少于限流阀值，就允许访问，并且计数器&#43;1 当次数大于限流阀值，就拒绝访问。 当前的时间窗口过去之后，计数器清零。 滑动窗口限流'>
+<meta property='og:url' content='https://hifing.github.io/p/springcloud/'>
+<meta property='og:site_name' content='Welcome to Barry&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2022-08-16T16:35:51&#43;08:00'/><meta property='article:modified_time' content='2022-08-16T16:35:51&#43;08:00'/>
+<meta name="twitter:title" content="SpringCloud">
+<meta name="twitter:description" content="SpringCloud Gateway SpringCloud Gateway 使用的Webflux中的reactor-netty响应式编程组件，底层使用了Netty通讯框架。
+Gateway的使用：SpringCloud gateway
+Zuul的IO模型 Springcloud中所集成的Zuul版本，采用的是Tomcat容器，使用的是传统的Servlet IO处理模型，会为每个请求分配一个线程来处理，无法应付高并发场景下的需求，所以Springcloud Zuul 是基于servlet之上的一个阻塞式处理模型。
+Webflux 服务器 Reactive Stream 是一套反应式编程 标准 和 规范；它由发布者、订阅者、订阅、处理器组成。 Reactor 是基于 Reactive Streams 一套 反应式编程框架；Mono实现了发布者功能，返回0-1个元素，Flux返回N个元素。 WebFlux 以 Reactor 为基础，实现 Web 领域的 反应式编程框架。在 WebFlux 接口中，请求不会被阻塞，所以服务端的接口耗时为 0。 注册中心 服务注册中心本质上是为了解耦服务提供者和服务消费者。对于任何一个微服务，原则上都应存在或者支持多个提供者，这是由微服务的分布式属性决定的。更进一步，为了支持弹性扩缩容特性，一个微服务的提供者的数量和分布往往是动态变化的，也是无法预先确定的。因此，原本在单体应用阶段常用的静态LB机制就不再适用了，需要引入额外的组件来管理微服务提供者的注册与发现，而这个组件就是服务注册中心。
+需要考虑的问题：
+测活：服务注册之后，如何对服务进行测活以保证服务的可用性？ 负载均衡：当存在多个服务提供者时，如何均衡各个提供者的负载？ 集成：在服务提供端或者调用端，如何集成注册中心？ 运行时依赖：引入注册中心之后，对应用的运行时环境有何影响？ 可用性：如何保证注册中心本身的可用性，特别是消除单点故障？ CAP理论 一致性(Consistency) (所有节点在同一时间具有相同的数据) 可用性(Availability) (保证每个请求不管成功或者失败都有响应) 分隔容忍(Partition tolerance) (系统中任意信息的丢失或失败不会影响系统的继续运作) Nacos Nacos内部接收到注册的请求时，不会立即写数据，而是将服务注册的任务放入一个阻塞队列就立即响应给客户端。然后利用线程池读取阻塞队列中的任务，异步来完成实例更新，从而提高并发写能力。 Nacos在更新实例列表时，会采用CopyOnWrite技术，首先将旧的实例列表拷贝一份，然后更新拷贝的实例列表，再用更新后的实例列表来覆盖旧的实例列表。 通过Ribbon实现负载均衡。（随机、轮询、加权、少并发连接优先、重试、区域敏感、可用性敏感） vs Eureka： Nacos的实例有永久和临时实例之分；而Eureka只支持临时实例 Nacos对临时实例采用心跳模式检测，对永久实例采用主动请求来检测；Eureka只支持心跳模式 Nacos支持定时拉取和订阅推送两种模式；Eureka只支持定时拉取模式 配置中心： 一般会存：可能会经常变化的配置信息，例如连接池，日志，线程池，限流熔断规则 我们的服务一般会先从内存中读取配置信息，同时我们的微服务还可以定时向nacos配置中心发请求拉取更新的配置信息 限流 限流算法 固定窗口限流
+首先维护一个计数器，将单位时间段当做一个窗口，计数器记录这个窗口接收请求的次数。
+当次数少于限流阀值，就允许访问，并且计数器&#43;1 当次数大于限流阀值，就拒绝访问。 当前的时间窗口过去之后，计数器清零。 滑动窗口限流">
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hudfc38dfe440c7d22d9f3dacb04f8b0ef_10461_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Welcome to Barry&#39;s Blog</a></h1>
+            <h2 class="site-description">In case I don&#39;t see you, good morning, good afternoon and good night.</h2>
+        </div>
+    </header><ol class="social-menu">
+            
+                <li>
+                    <a 
+                        href='https://github.com/HiFing'
+                        target="_blank"
+                        title="GitHub"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+        </ol><ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/%E7%AE%80%E4%BB%8B/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>简介</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归类</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/%E9%93%BE%E6%8E%A5/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" />
+  <path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" />
+</svg>
+
+
+
+                
+                <span>链接</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section">
+            
+            
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>Dark Mode</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+<main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/" style="background-color: #2a9d8f; color: #fff;">
+                分布式
+            </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/springcloud/">SpringCloud</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Aug 16, 2022</time>
+            </div>
+        
+
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time class="article-time--reading">
+                    1 minute read
+                </time>
+            </div>
+        
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <h1 id="springcloud">SpringCloud</h1>
+<h2 id="gateway">Gateway</h2>
+<p>SpringCloud Gateway 使用的<strong>Webflux</strong>中的reactor-netty响应式编程组件，底层使用了Netty通讯框架。</p>
+<p>Gateway的使用：<a class="link" href="https://www.cnblogs.com/crazymakercircle/p/11704077.html"  target="_blank" rel="noopener"
+    >SpringCloud gateway</a></p>
+<h3 id="zuul的io模型">Zuul的IO模型</h3>
+<p>Springcloud中所集成的Zuul版本，采用的是<strong>Tomcat</strong>容器，使用的是传统的<strong>Servlet</strong> IO处理模型，会为每个请求分配一个线程来处理，无法应付高并发场景下的需求，所以Springcloud Zuul 是基于servlet之上的一个阻塞式处理模型。</p>
+<p><img src="/assets/img/19816137-bb466f6b0135bb71.jpeg"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<h3 id="webflux-服务器">Webflux 服务器</h3>
+<p><img src="/assets/img/19816137-dad0e43fc31f4536.jpeg"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<blockquote>
+<ul>
+<li><code>Reactive Stream</code> 是一套反应式编程 <strong>标准</strong> 和 <strong>规范</strong>；它由发布者、订阅者、订阅、处理器组成。</li>
+<li><code>Reactor</code> 是基于 <code>Reactive Streams</code> 一套 <strong>反应式编程框架</strong>；Mono实现了发布者功能，返回0-1个元素，Flux返回N个元素。</li>
+<li><code>WebFlux</code> 以 <code>Reactor</code> 为基础，实现 <code>Web</code> 领域的 <strong>反应式编程框架</strong>。在 WebFlux 接口中，请求不会被阻塞，所以服务端的接口耗时为 0。</li>
+</ul>
+</blockquote>
+<h2 id="注册中心">注册中心</h2>
+<p>服务注册中心本质上是为了<strong>解耦服务提供者和服务消费者</strong>。对于任何一个微服务，原则上都应存在或者支持多个提供者，这是由微服务的分布式属性决定的。更进一步，为了支持弹性扩缩容特性，一个微服务的提供者的数量和分布往往是动态变化的，也是无法预先确定的。因此，原本在单体应用阶段常用的静态LB机制就不再适用了，需要引入额外的组件来管理微服务提供者的注册与发现，而这个组件就是服务注册中心。</p>
+<blockquote>
+<p>需要考虑的问题：</p>
+<ul>
+<li>测活：服务注册之后，如何对服务进行测活以保证服务的可用性？</li>
+<li>负载均衡：当存在多个服务提供者时，如何均衡各个提供者的负载？</li>
+<li>集成：在服务提供端或者调用端，如何集成注册中心？</li>
+<li>运行时依赖：引入注册中心之后，对应用的运行时环境有何影响？</li>
+<li>可用性：如何保证注册中心本身的可用性，特别是消除单点故障？</li>
+</ul>
+</blockquote>
+<p><img src="/assets/img/8e9924e4130fff3d3226fec90d324ad3.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<h3 id="cap理论">CAP理论</h3>
+<ul>
+<li>一致性(Consistency) (所有节点在同一时间具有相同的数据)</li>
+<li>可用性(Availability) (保证每个请求不管成功或者失败都有响应)</li>
+<li>分隔容忍(Partition tolerance) (系统中任意信息的丢失或失败不会影响系统的继续运作)</li>
+</ul>
+<h3 id="nacos">Nacos</h3>
+<ul>
+<li>Nacos内部接收到注册的请求时，不会立即写数据，而是将服务注册的任务放入一个阻塞<strong>队列</strong>就立即响应给客户端。然后利用线程池读取阻塞队列中的任务，异步来完成实例更新，从而提高并发写能力。</li>
+<li>Nacos在更新实例列表时，会采用<strong>CopyOnWrite</strong>技术，首先将旧的实例列表拷贝一份，然后更新拷贝的实例列表，再用更新后的实例列表来覆盖旧的实例列表。</li>
+<li>通过Ribbon实现负载均衡。（随机、轮询、加权、少并发连接优先、重试、区域敏感、可用性敏感）</li>
+<li>vs Eureka：
+<ul>
+<li>Nacos的实例有永久和临时实例之分；而Eureka只支持临时实例</li>
+<li>Nacos对临时实例采用心跳模式检测，对永久实例采用主动请求来检测；Eureka只支持心跳模式</li>
+<li>Nacos支持定时拉取和订阅推送两种模式；Eureka只支持定时拉取模式</li>
+</ul>
+</li>
+<li>配置中心：
+<ul>
+<li>一般会存：可能会经常变化的配置信息，例如连接池，日志，线程池，限流熔断规则</li>
+<li>我们的服务一般会先从内存中读取配置信息，同时我们的微服务还可以定时向nacos配置中心发请求拉取更新的配置信息</li>
+</ul>
+</li>
+</ul>
+<h2 id="限流">限流</h2>
+<h3 id="限流算法">限流算法</h3>
+<ul>
+<li>
+<p>固定窗口限流</p>
+<blockquote>
+<p>首先维护一个计数器，<strong>将单位时间段当做一个窗口</strong>，计数器记录这个窗口接收请求的次数。</p>
+<ul>
+<li>当次数少于限流阀值，就允许访问，并且计数器+1</li>
+<li>当次数大于限流阀值，就拒绝访问。</li>
+<li>当前的时间窗口过去之后，计数器清零。</li>
+</ul>
+</blockquote>
+<p><img src="/assets/img/v2-a29cffdcda8be8fc120f0cfb4b4830d8_1440w.jpeg"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+</li>
+<li>
+<p>滑动窗口限流</p>
+<blockquote>
+<p>滑动窗口限流解决<strong>固定窗口临界值的问题</strong>。它将单位时间周期分为n个小周期，分别记录每个小周期内接口的访问次数，并且根据时间滑动删除过期的小周期。</p>
+</blockquote>
+</li>
+<li>
+<p>漏桶算法</p>
+<blockquote>
+<p>往漏桶中以任意速率流入水，以固定的速率流出水。当水超过桶的容量时，会被溢出，也就是被丢弃。因为桶容量是不变的，保证了整体的速率。</p>
+<p>在正常流量的时候，系统按照固定的速率处理请求，是我们想要的。但是<strong>面对突发流量</strong>的时候，漏桶算法还是循规蹈矩地处理请求，这就不是我们想看到的啦。流量变突发时，我们肯定<strong>希望系统尽量快点处理请求</strong>，提升用户体验嘛。</p>
+</blockquote>
+</li>
+<li>
+<p>令牌桶算法</p>
+<blockquote>
+<p>有一个令牌管理员，根据限流大小，<strong>定速往令牌桶里放令牌</strong>。如果令牌数量满了，超过令牌桶容量的限制，那就丢弃。系统在接受到一个用户请求时，都会先去令牌桶要一个令牌。如果拿到令牌，那么就处理这个请求的业务逻辑；如果拿不到令牌，就直接拒绝这个请求。</p>
+</blockquote>
+<p><img src="/assets/img/v2-1df826f9684600bf129c040e7312ec8a_1440w.jpeg"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>Gateway则采用了基于Redis实现的令牌桶算法，而Sentinel内部却比较复杂：</p>
+<ul>
+<li>默认限流模式是基于滑动时间窗口算法</li>
+<li>排队等待的限流模式则基于漏桶算法</li>
+<li>而热点参数限流则是基于令牌桶算法</li>
+</ul>
+</li>
+</ul>
+<h3 id="sentinel">Sentinel</h3>
+<ul>
+<li>
+<p>vs Hystrix：</p>
+<p>Hystix默认是基于线程池实现的线程隔离，每一个被隔离的业务都要创建一个独立的线程池，线程过多会带来额外的CPU开销，性能一般，但是隔离性更强。</p>
+<p>Sentinel是基于信号量（计数器）实现的线程隔离，不用创建线程池，性能较好，但是隔离性一般。</p>
+</li>
+<li>
+<p>流量控制：</p>
+<ul>
+<li>直接拒绝</li>
+<li>冷启动</li>
+<li>匀速器</li>
+</ul>
+</li>
+</ul>
+<h2 id="rpc">RPC</h2>
+<h3 id="feign">Feign</h3>
+<h3 id="dubbo">Dubbo</h3>
+<h4 id="一致性哈希算法">一致性哈希算法</h4>
+<p><a class="link" href="https://www.jianshu.com/p/528ce5cd7e8f"  target="_blank" rel="noopener"
+    >一致性Hash原理与实现 - 简书 (jianshu.com)</a></p>
+<p><img src="/assets/img/6555006-8f61754de37eb380.webp"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<h2 id="链路追踪">链路追踪</h2>
+<h2 id="实战">实战</h2>
+<p><a class="link" href="https://blog.csdn.net/weixin_56320090/article/details/117334865"  target="_blank" rel="noopener"
+    >使用nacos、openfegin、gateway、链路追踪管理微服务_你看星星很亮的博客-CSDN博客</a></p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">Related content</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/p/%E5%88%86%E5%B8%83%E5%BC%8F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">分布式文件系统</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Welcome to Barry&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.12.0">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">Table of contents</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#gateway">Gateway</a>
+      <ol>
+        <li><a href="#zuul的io模型">Zuul的IO模型</a></li>
+        <li><a href="#webflux-服务器">Webflux 服务器</a></li>
+      </ol>
+    </li>
+    <li><a href="#注册中心">注册中心</a>
+      <ol>
+        <li><a href="#cap理论">CAP理论</a></li>
+        <li><a href="#nacos">Nacos</a></li>
+      </ol>
+    </li>
+    <li><a href="#限流">限流</a>
+      <ol>
+        <li><a href="#限流算法">限流算法</a></li>
+        <li><a href="#sentinel">Sentinel</a></li>
+      </ol>
+    </li>
+    <li><a href="#rpc">RPC</a>
+      <ol>
+        <li><a href="#feign">Feign</a></li>
+        <li><a href="#dubbo">Dubbo</a>
+          <ol>
+            <li><a href="#一致性哈希算法">一致性哈希算法</a></li>
+          </ol>
+        </li>
+      </ol>
+    </li>
+    <li><a href="#链路追踪">链路追踪</a></li>
+    <li><a href="#实战">实战</a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

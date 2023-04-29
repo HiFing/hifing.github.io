@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>分布式 on Welcome to Barry&#39;s Blog</title>
+        <link>https://hifing.github.io/categories/%E5%88%86%E5%B8%83%E5%BC%8F/</link>
+        <description>Recent content in 分布式 on Welcome to Barry&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>en-us</language>
+        <lastBuildDate>Thu, 18 Aug 2022 22:48:50 +0800</lastBuildDate><atom:link href="https://hifing.github.io/categories/%E5%88%86%E5%B8%83%E5%BC%8F/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>分布式文件系统</title>
+        <link>https://hifing.github.io/p/%E5%88%86%E5%B8%83%E5%BC%8F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/</link>
+        <pubDate>Thu, 18 Aug 2022 22:48:50 +0800</pubDate>
+        
+        <guid>https://hifing.github.io/p/%E5%88%86%E5%B8%83%E5%BC%8F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>SpringCloud</title>
+        <link>https://hifing.github.io/p/springcloud/</link>
+        <pubDate>Tue, 16 Aug 2022 16:35:51 +0800</pubDate>
+        
+        <guid>https://hifing.github.io/p/springcloud/</guid>
+        <description>&lt;h1 id=&#34;springcloud&#34;&gt;SpringCloud&lt;/h1&gt;
+&lt;h2 id=&#34;gateway&#34;&gt;Gateway&lt;/h2&gt;
+&lt;p&gt;SpringCloud Gateway 使用的&lt;strong&gt;Webflux&lt;/strong&gt;中的reactor-netty响应式编程组件，底层使用了Netty通讯框架。&lt;/p&gt;
+&lt;p&gt;Gateway的使用：&lt;a class=&#34;link&#34; href=&#34;https://www.cnblogs.com/crazymakercircle/p/11704077.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;SpringCloud gateway&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;zuul的io模型&#34;&gt;Zuul的IO模型&lt;/h3&gt;
+&lt;p&gt;Springcloud中所集成的Zuul版本，采用的是&lt;strong&gt;Tomcat&lt;/strong&gt;容器，使用的是传统的&lt;strong&gt;Servlet&lt;/strong&gt; IO处理模型，会为每个请求分配一个线程来处理，无法应付高并发场景下的需求，所以Springcloud Zuul 是基于servlet之上的一个阻塞式处理模型。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://hifing.github.io/assets/img/19816137-bb466f6b0135bb71.jpeg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;webflux-服务器&#34;&gt;Webflux 服务器&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://hifing.github.io/assets/img/19816137-dad0e43fc31f4536.jpeg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Reactive Stream&lt;/code&gt; 是一套反应式编程 &lt;strong&gt;标准&lt;/strong&gt; 和 &lt;strong&gt;规范&lt;/strong&gt;；它由发布者、订阅者、订阅、处理器组成。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Reactor&lt;/code&gt; 是基于 &lt;code&gt;Reactive Streams&lt;/code&gt; 一套 &lt;strong&gt;反应式编程框架&lt;/strong&gt;；Mono实现了发布者功能，返回0-1个元素，Flux返回N个元素。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;WebFlux&lt;/code&gt; 以 &lt;code&gt;Reactor&lt;/code&gt; 为基础，实现 &lt;code&gt;Web&lt;/code&gt; 领域的 &lt;strong&gt;反应式编程框架&lt;/strong&gt;。在 WebFlux 接口中，请求不会被阻塞，所以服务端的接口耗时为 0。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;注册中心&#34;&gt;注册中心&lt;/h2&gt;
+&lt;p&gt;服务注册中心本质上是为了&lt;strong&gt;解耦服务提供者和服务消费者&lt;/strong&gt;。对于任何一个微服务，原则上都应存在或者支持多个提供者，这是由微服务的分布式属性决定的。更进一步，为了支持弹性扩缩容特性，一个微服务的提供者的数量和分布往往是动态变化的，也是无法预先确定的。因此，原本在单体应用阶段常用的静态LB机制就不再适用了，需要引入额外的组件来管理微服务提供者的注册与发现，而这个组件就是服务注册中心。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;需要考虑的问题：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;测活：服务注册之后，如何对服务进行测活以保证服务的可用性？&lt;/li&gt;
+&lt;li&gt;负载均衡：当存在多个服务提供者时，如何均衡各个提供者的负载？&lt;/li&gt;
+&lt;li&gt;集成：在服务提供端或者调用端，如何集成注册中心？&lt;/li&gt;
+&lt;li&gt;运行时依赖：引入注册中心之后，对应用的运行时环境有何影响？&lt;/li&gt;
+&lt;li&gt;可用性：如何保证注册中心本身的可用性，特别是消除单点故障？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://hifing.github.io/assets/img/8e9924e4130fff3d3226fec90d324ad3.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;cap理论&#34;&gt;CAP理论&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;一致性(Consistency) (所有节点在同一时间具有相同的数据)&lt;/li&gt;
+&lt;li&gt;可用性(Availability) (保证每个请求不管成功或者失败都有响应)&lt;/li&gt;
+&lt;li&gt;分隔容忍(Partition tolerance) (系统中任意信息的丢失或失败不会影响系统的继续运作)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;nacos&#34;&gt;Nacos&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Nacos内部接收到注册的请求时，不会立即写数据，而是将服务注册的任务放入一个阻塞&lt;strong&gt;队列&lt;/strong&gt;就立即响应给客户端。然后利用线程池读取阻塞队列中的任务，异步来完成实例更新，从而提高并发写能力。&lt;/li&gt;
+&lt;li&gt;Nacos在更新实例列表时，会采用&lt;strong&gt;CopyOnWrite&lt;/strong&gt;技术，首先将旧的实例列表拷贝一份，然后更新拷贝的实例列表，再用更新后的实例列表来覆盖旧的实例列表。&lt;/li&gt;
+&lt;li&gt;通过Ribbon实现负载均衡。（随机、轮询、加权、少并发连接优先、重试、区域敏感、可用性敏感）&lt;/li&gt;
+&lt;li&gt;vs Eureka：
+&lt;ul&gt;
+&lt;li&gt;Nacos的实例有永久和临时实例之分；而Eureka只支持临时实例&lt;/li&gt;
+&lt;li&gt;Nacos对临时实例采用心跳模式检测，对永久实例采用主动请求来检测；Eureka只支持心跳模式&lt;/li&gt;
+&lt;li&gt;Nacos支持定时拉取和订阅推送两种模式；Eureka只支持定时拉取模式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;配置中心：
+&lt;ul&gt;
+&lt;li&gt;一般会存：可能会经常变化的配置信息，例如连接池，日志，线程池，限流熔断规则&lt;/li&gt;
+&lt;li&gt;我们的服务一般会先从内存中读取配置信息，同时我们的微服务还可以定时向nacos配置中心发请求拉取更新的配置信息&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;限流&#34;&gt;限流&lt;/h2&gt;
+&lt;h3 id=&#34;限流算法&#34;&gt;限流算法&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;固定窗口限流&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;首先维护一个计数器，&lt;strong&gt;将单位时间段当做一个窗口&lt;/strong&gt;，计数器记录这个窗口接收请求的次数。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;当次数少于限流阀值，就允许访问，并且计数器+1&lt;/li&gt;
+&lt;li&gt;当次数大于限流阀值，就拒绝访问。&lt;/li&gt;
+&lt;li&gt;当前的时间窗口过去之后，计数器清零。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://hifing.github.io/assets/img/v2-a29cffdcda8be8fc120f0cfb4b4830d8_1440w.jpeg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;滑动窗口限流&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;滑动窗口限流解决&lt;strong&gt;固定窗口临界值的问题&lt;/strong&gt;。它将单位时间周期分为n个小周期，分别记录每个小周期内接口的访问次数，并且根据时间滑动删除过期的小周期。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;漏桶算法&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;往漏桶中以任意速率流入水，以固定的速率流出水。当水超过桶的容量时，会被溢出，也就是被丢弃。因为桶容量是不变的，保证了整体的速率。&lt;/p&gt;
+&lt;p&gt;在正常流量的时候，系统按照固定的速率处理请求，是我们想要的。但是&lt;strong&gt;面对突发流量&lt;/strong&gt;的时候，漏桶算法还是循规蹈矩地处理请求，这就不是我们想看到的啦。流量变突发时，我们肯定&lt;strong&gt;希望系统尽量快点处理请求&lt;/strong&gt;，提升用户体验嘛。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;令牌桶算法&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;有一个令牌管理员，根据限流大小，&lt;strong&gt;定速往令牌桶里放令牌&lt;/strong&gt;。如果令牌数量满了，超过令牌桶容量的限制，那就丢弃。系统在接受到一个用户请求时，都会先去令牌桶要一个令牌。如果拿到令牌，那么就处理这个请求的业务逻辑；如果拿不到令牌，就直接拒绝这个请求。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://hifing.github.io/assets/img/v2-1df826f9684600bf129c040e7312ec8a_1440w.jpeg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;Gateway则采用了基于Redis实现的令牌桶算法，而Sentinel内部却比较复杂：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;默认限流模式是基于滑动时间窗口算法&lt;/li&gt;
+&lt;li&gt;排队等待的限流模式则基于漏桶算法&lt;/li&gt;
+&lt;li&gt;而热点参数限流则是基于令牌桶算法&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;sentinel&#34;&gt;Sentinel&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;vs Hystrix：&lt;/p&gt;
+&lt;p&gt;Hystix默认是基于线程池实现的线程隔离，每一个被隔离的业务都要创建一个独立的线程池，线程过多会带来额外的CPU开销，性能一般，但是隔离性更强。&lt;/p&gt;
+&lt;p&gt;Sentinel是基于信号量（计数器）实现的线程隔离，不用创建线程池，性能较好，但是隔离性一般。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;流量控制：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;直接拒绝&lt;/li&gt;
+&lt;li&gt;冷启动&lt;/li&gt;
+&lt;li&gt;匀速器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;rpc&#34;&gt;RPC&lt;/h2&gt;
+&lt;h3 id=&#34;feign&#34;&gt;Feign&lt;/h3&gt;
+&lt;h3 id=&#34;dubbo&#34;&gt;Dubbo&lt;/h3&gt;
+&lt;h4 id=&#34;一致性哈希算法&#34;&gt;一致性哈希算法&lt;/h4&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.jianshu.com/p/528ce5cd7e8f&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;一致性Hash原理与实现 - 简书 (jianshu.com)&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://hifing.github.io/assets/img/6555006-8f61754de37eb380.webp&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;链路追踪&#34;&gt;链路追踪&lt;/h2&gt;
+&lt;h2 id=&#34;实战&#34;&gt;实战&lt;/h2&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://blog.csdn.net/weixin_56320090/article/details/117334865&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;使用nacos、openfegin、gateway、链路追踪管理微服务_你看星星很亮的博客-CSDN博客&lt;/a&gt;&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

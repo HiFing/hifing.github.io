@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>MySQL on Welcome to Barry&#39;s Blog</title>
+        <link>https://hifing.github.io/categories/mysql/</link>
+        <description>Recent content in MySQL on Welcome to Barry&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>en-us</language>
+        <lastBuildDate>Fri, 21 Apr 2023 14:47:17 +0800</lastBuildDate><atom:link href="https://hifing.github.io/categories/mysql/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>MySQL事务</title>
+        <link>https://hifing.github.io/p/mysql%E4%BA%8B%E5%8A%A1/</link>
+        <pubDate>Fri, 21 Apr 2023 14:47:17 +0800</pubDate>
+        
+        <guid>https://hifing.github.io/p/mysql%E4%BA%8B%E5%8A%A1/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>MySQL基础</title>
+        <link>https://hifing.github.io/p/mysql%E5%9F%BA%E7%A1%80/</link>
+        <pubDate>Fri, 21 Apr 2023 14:47:17 +0800</pubDate>
+        
+        <guid>https://hifing.github.io/p/mysql%E5%9F%BA%E7%A1%80/</guid>
+        <description>&lt;h1 id=&#34;mysql结构&#34;&gt;MySQL结构&lt;/h1&gt;
+&lt;p&gt;MySQL的一个设计思想：&lt;strong&gt;如果内存够用，就要多利用内存，尽量减少磁盘访问&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://hifing.github.io/assets/img/java/mysqlprocess.webp&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;MySQL结构图&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;一条select语句的执行流程&#34;&gt;一条select语句的执行流程&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;连接器&lt;/strong&gt;负责与客户端进行TCP三次握手，校验用户名密码，读取用户身份与操作权限。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;此处的查询缓存是在Server层执行的，并不是存储引擎中的buffer pool&lt;/strong&gt;。当数据表频繁更新，或者查询的数据非常庞大时，缓存命中率可能不会很高，考虑到Server层的缓存实用性不大，因此，从MySQL 8.0 开始，执行一条 SQL 查询语句，不会再在Server层中执行查询缓存的步骤了。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在执行SQL语句前，先由&lt;strong&gt;解析器&lt;/strong&gt;对SQL语句进行解析，该步骤分为词法分析和语法分析。其中，在词法分析时，MySQL根据SQL关键词构建SQL语法树；语法分析时，解析器会根据语法规则，判断输入的 SQL 语句&lt;strong&gt;是否满足 MySQL 语法&lt;/strong&gt;，比如，把&lt;code&gt;from&lt;/code&gt;写成&lt;code&gt;form&lt;/code&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在执行SQL语句时，会分为以下三个阶段：&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;预处理：检查SQL中的&lt;strong&gt;表或者字段是否存在&lt;/strong&gt;，将&lt;code&gt;*&lt;/code&gt;扩展为表上所有的列。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;优化：优化器负责将SQL查询语句的执行方案确定下来。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;执行：（以&lt;code&gt;select * from product where id = 1;&lt;/code&gt;为例）&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;优化的访问类型为const（常量查询，此外还有all、range等），首次查询调用&lt;code&gt;read_first_record&lt;/code&gt;函数指针指向的函数，让存储引擎读取符合条件的第一条记录；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;通过主键索引的B+树定位第一条记录；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;执行器（Server层）判断记录是否符合查询条件；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;查询过程为while循环，调用&lt;code&gt;read_record&lt;/code&gt;函数指针指向的函数，因为是const访问类型，该指针指向-1，查询结束。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;索引下推对执行阶段的优化&#34;&gt;索引下推对执行阶段的优化&lt;/h3&gt;
+&lt;p&gt;使用索引下推（MySQL 5.6 以后）能&lt;strong&gt;减少二级索引在查询时的回表操作&lt;/strong&gt;，提高效率，它将Server层部分负责的任务&lt;strong&gt;交给引擎层去处理&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;以&lt;code&gt;select * from t_user where age &amp;gt; 20 and reward = 100000;&lt;/code&gt;为例（已建立&lt;code&gt;age&lt;/code&gt;和&lt;code&gt;reward&lt;/code&gt;的联合索引）：&lt;/p&gt;
+&lt;p&gt;联合索引遇到范围查找会停止匹配，此SQL仅&lt;code&gt;age&lt;/code&gt;能使用联合索引，当开启索引下推时，根据二级索引查询获取到的一条记录，引擎层直接判断&lt;code&gt;reward&lt;/code&gt;是否符合条件，若不符合，则直接舍弃。（若不开启，则需要先进行&lt;strong&gt;回表&lt;/strong&gt;操作，把完整数据反馈至Server层，由Server层判断）&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h1 id=&#34;innodb和myisam的不同&#34;&gt;InnoDB和MyISAM的不同&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;MyISAM 只有表级锁，而 &lt;strong&gt;InnoDB 支持行级锁和表级锁&lt;/strong&gt;，默认为行级锁。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;MyISAM 不提供&lt;strong&gt;事务&lt;/strong&gt;支持。InnoDB 提供事务支持，实现了 SQL 标准定义了四个隔离级别，具有提交和回滚事务的能力。并且，InnoDB 默认使用的可重读隔离级别是可以解决幻读问题发生的（基于 MVCC 和 Next-Key Lock）。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;MyISAM 不支持&lt;strong&gt;外键&lt;/strong&gt;，而 InnoDB 支持。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;使用 InnoDB 的数据库在异常崩溃后，数据库重新启动的时候会保证数据库恢复到崩溃前的状态。这个恢复的过程依赖于 &lt;code&gt;redo log&lt;/code&gt; 。MyISAM不支持。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;虽然 MyISAM 引擎和 InnoDB 引擎都是使用 B+Tree 作为索引结构，但是两者的实现方式不太一样。&lt;/p&gt;
+&lt;p&gt;InnoDB 引擎中，其数据文件本身就是索引文件。相比 MyISAM，索引文件和数据文件是分离的，其表数据文件本身就是按 B+Tree 组织的一个索引结构，树的叶节点 data 域保存了完整的数据记录。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        </item>
+        <item>
+        <title>MySQL日志</title>
+        <link>https://hifing.github.io/p/mysql%E6%97%A5%E5%BF%97/</link>
+        <pubDate>Fri, 21 Apr 2023 14:47:17 +0800</pubDate>
+        
+        <guid>https://hifing.github.io/p/mysql%E6%97%A5%E5%BF%97/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>MySQL索引</title>
+        <link>https://hifing.github.io/p/mysql%E7%B4%A2%E5%BC%95/</link>
+        <pubDate>Fri, 21 Apr 2023 14:47:17 +0800</pubDate>
+        
+        <guid>https://hifing.github.io/p/mysql%E7%B4%A2%E5%BC%95/</guid>
+        <description>&lt;h1 id=&#34;mysql索引&#34;&gt;MySQL索引&lt;/h1&gt;
+&lt;h2 id=&#34;概念&#34;&gt;概念&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;几种数据结构对比&lt;/strong&gt;：&lt;a class=&#34;link&#34; href=&#34;https://zhuanlan.zhihu.com/p/27700617&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;平衡二叉树、B树、B+树、B*树介绍&lt;/a&gt; 与 &lt;a class=&#34;link&#34; href=&#34;https://www.cs.usfca.edu/~galles/visualization/Algorithms.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;演示链接&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;回表&lt;/strong&gt;：查询二级索引时将会得到主键值，根据主键值查询主键索引才能得到整行数据，这个过程叫做回表，即需要查询这两个B+树才能得到数据本身。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;覆盖查找&lt;/strong&gt;：如SQL语句&lt;code&gt;select id from product where product_no = &#39;0002&#39;;&lt;/code&gt;，在二级索引中即可得到主键值，因此直接返回主键ID即可而无需查询主键索引，这个过程叫覆盖查找。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;索引下推&lt;/strong&gt;：MySQL 5.6 引入的索引下推优化，可以在联合索引遍历过程中，对联合索引中包含的字段先做判断，直接过滤掉不满足条件的记录，减少回表次数，该优化过程在引擎层进行。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;union_idx&#34;&gt;联合索引&lt;/span&gt;&lt;/strong&gt;：联合索引树形结构如下（该图建立了&lt;code&gt;&amp;lt;id,name&amp;gt;&lt;/code&gt;的二级联合索引，叶子结点为双向链表）：
+&lt;img src=&#34;https://hifing.github.io/assets/img/%e8%81%94%e5%90%88%e7%b4%a2%e5%bc%95.webp&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;联合索引树结构&#34;
+	
+	
+&gt;
+并不是查询过程使用了联合索引查询，就代表联合索引中的所有字段都用到了联合索引进行索引查询，比如字段需要&lt;strong&gt;范围查找&lt;/strong&gt;时，则该范围查找字段后的字段无法使用联合索引，因为在这个范围中，后面的字段是无序的。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;TIP&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;但是&lt;code&gt;select * from t_table where a &amp;gt;= 1 and b = 2;&lt;/code&gt;这个语句查询过程中，虽然在符合&lt;code&gt;a &amp;gt;= 1&lt;/code&gt;条件的二级索引记录的范围里，&lt;code&gt;b&lt;/code&gt;字段的值是无序的，但是对于符合&lt;code&gt;a = 1&lt;/code&gt;的二级索引记录的范围里，&lt;code&gt;b&lt;/code&gt;字段的值是有序的。
+于是，在确定需要扫描的二级索引的范围时，当二级索引记录的&lt;code&gt;a&lt;/code&gt;字段值为1时，可以通过&lt;code&gt;b = 2&lt;/code&gt;条件减少需要扫描的二级索引记录范围（&lt;code&gt;b&lt;/code&gt;字段可以利用联合索引进行索引查询的意思）。
+也就是说，从符合&lt;code&gt;a = 1 and b = 2&lt;/code&gt;条件的第一条记录开始扫描，而不需要从第一个&lt;code&gt;a&lt;/code&gt;字段值为1的记录开始扫描。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;mysql的b树&#34;&gt;MySQL的B+树&lt;/h2&gt;
+&lt;h3 id=&#34;为什么选择b树&#34;&gt;为什么选择B+树？&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;B+Tree 是一种多叉树，&lt;strong&gt;叶子节点才存放数据，非叶子节点只存放索引&lt;/strong&gt;，而且每个节点里的数据是按主键顺序存放的，索引叶子结点结构为一条双向链表。&lt;/li&gt;
+&lt;li&gt;数据库的索引和数据都是存储在硬盘的。&lt;strong&gt;B+Tree 只在叶子节点存储数据，而 B 树 的非叶子节点也要存储数据，所以 B+Tree 的单个节点的数据量更小，在相同的磁盘 I/O 次数下，就能查询更多的节点&lt;/strong&gt;。另外，B+Tree 叶子节点采用的是&lt;strong&gt;双向链表&lt;/strong&gt;连接，适合 MySQL 中常见的基于范围的顺序查找，而 B 树无法做到这一点。&lt;/li&gt;
+&lt;li&gt;在实际应用中，B+树的度大于100，保证千万量级数据下B+树的高度为3-4，减少磁盘I/O次数。&lt;/li&gt;
+&lt;li&gt;Hash在等值查询时非常高效，但是Hash表不适合做范围查询。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;mysql-b树数据页&#34;&gt;MySQL B+树数据页&lt;/h3&gt;
+&lt;div align=&#34;center&#34;&gt;&lt;img width=300px src=../../assets/img/数据页.webp /&gt;&lt;/div&gt;
+数据页中的记录按照主键顺序组成单向链表，数据页中有一个页目录，起到记录的索引作用：
+&lt;div align=&#34;center&#34;&gt;&lt;img width=400px src=../../assets/img/页目录.webp /&gt;&lt;/div&gt;
+通过槽查找记录时，可以使用二分法快速定位要查询的记录在哪个槽（哪个记录分组），定位到槽后，再遍历槽内的所有记录，找到对应的记录。
+&lt;h2 id=&#34;索引失效与索引优化&#34;&gt;索引失效与索引优化&lt;/h2&gt;
+&lt;h3 id=&#34;索引失效&#34;&gt;索引失效&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;联合索引失效：如&lt;a href=&#34;#union_idx&#34;&gt;前文&lt;/a&gt;所示，使用联合索引时，存在&lt;strong&gt;最左匹配&lt;/strong&gt;原则，即若不设定&lt;code&gt;id&lt;/code&gt;的查询条件直接根据&lt;code&gt;name&lt;/code&gt;的条件查询，则该联合索引失效。值得注意的是，由于&lt;strong&gt;优化器&lt;/strong&gt;对SQL语句的优化措施，打乱&lt;code&gt;where&lt;/code&gt;中的顺序不影响查询方案的确定。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;左或者左右模糊匹配&lt;/strong&gt;：&lt;code&gt;like %xx&lt;/code&gt; 或者 &lt;code&gt;like %xx%&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;对索引列做了&lt;strong&gt;计算&lt;/strong&gt;、函数、类型转换操作。&lt;/li&gt;
+&lt;li&gt;在 WHERE 子句中，如果在 &lt;code&gt;OR&lt;/code&gt; 前的条件列是索引列，而在 &lt;code&gt;OR&lt;/code&gt; 后的条件列不是索引列，那么索引会失效。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;TIP&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;索引效率排行（低到高）：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;All（全表扫描）；&lt;/li&gt;
+&lt;li&gt;index（全索引扫描）；&lt;/li&gt;
+&lt;li&gt;range（索引范围扫描）；&lt;/li&gt;
+&lt;li&gt;ref（非唯一索引扫描）；&lt;/li&gt;
+&lt;li&gt;eq_ref（唯一索引扫描）；&lt;/li&gt;
+&lt;li&gt;const（结果只有一条的主键或唯一索引扫描）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;索引优化&#34;&gt;索引优化&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;前缀优化：使用某个字段中字符串的前几个字符建立索引，既减小索引字段大小，又有效提高索引的查询速度。&lt;/li&gt;
+&lt;li&gt;覆盖索引优化：当不需要查询出所有字段时，可以建立一个联合索引，即「商品ID、名称、价格」作为一个联合索引。使用覆盖索引的好处就是，不需要查询出包含整行记录的所有信息，也就减少了大量的 I/O 操作。&lt;/li&gt;
+&lt;li&gt;主键自增：主键自增时新增记录是追加操作，能避免&lt;strong&gt;页分裂&lt;/strong&gt;的情况。页分裂会造成大量的存储碎片，导致查询效率不高。&lt;/li&gt;
+&lt;li&gt;NOT NULL：索引列存在 NULL 就会导致优化器在做索引选择的时候更加复杂，更加难以优化。NULL 值是一个没意义的值，但是它会占用物理空间，所以会带来的存储空间的问题。&lt;/li&gt;
+&lt;li&gt;避免索引失效&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;什么时候用索引&#34;&gt;什么时候用索引&lt;/h2&gt;
+&lt;p&gt;使用索引的场景：字段唯一性、经常where、group by、order by&lt;/p&gt;
+&lt;p&gt;不需要使用索引的场景：字段存在大量重复数据（比如性别）、经常更新的字段&lt;/p&gt;
+&lt;h2 id=&#34;拓展&#34;&gt;拓展&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;MyISAM 和 InnoDB 中 B+ 树的差异：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;MyISAM 引擎中，B+Tree 叶节点的 data 域存放的是数据记录的地址。在索引检索的时候，首先按照 B+Tree 搜索算法搜索索引，如果指定的 Key 存在，则取出其 data 域的值，然后以 data 域的值为地址读取相应的数据记录。这被称为“&lt;strong&gt;非聚簇索引&lt;/strong&gt;”。
+InnoDB 引擎中，其数据文件本身就是索引文件。相比 MyISAM，索引文件和数据文件是分离的，其表数据文件本身就是按 B+Tree 组织的一个索引结构，树的叶节点 data 域保存了完整的数据记录。这个索引的 key 是数据表的主键，因此 InnoDB 表数据文件本身就是主索引。这被称为“&lt;strong&gt;聚簇索引&lt;/strong&gt;（或聚集索引）”，而其余的索引都作为辅助索引，辅助索引的 data 域存储相应记录主键的值而不是地址，这也是和 MyISAM 不同的地方。在根据主索引搜索时，直接找到 key 所在的节点即可取出数据；在根据辅助索引查找时，则需要先取出主键的值，再走一遍主索引。 因此，在设计表的时候，不建议使用过长的字段作为主键，也不建议使用非单调的字段作为主键，这样会造成主索引频繁分裂。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;MySQL 在遇到字符串和数字比较的时候，会自动把字符串转为数字，然后再进行比较。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;脑筋急转弯：使用左模糊匹配（like &amp;ldquo;%xx&amp;rdquo;）并不一定会走全表扫描，关键还是看数据表中的字段。如果数据库表中的字段只有主键+二级索引，那么即使使用了左模糊匹配，也不会走全表扫描（type=all），而是走全扫描二级索引树(type=index)。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;count性能对比：
+&lt;code&gt;count()&lt;/code&gt;是一个聚合函数，函数的参数不仅可以是字段名，也可以是其他任意表达式，该函数作用是&lt;strong&gt;统计符合查询条件的记录&lt;/strong&gt;中，函数指定的参数&lt;strong&gt;不为 NULL&lt;/strong&gt;的记录有多少个。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;count(*)=count(1)&amp;gt;count(主键字段)&amp;gt;count(字段)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;MySQL 会对 count(*) 和 count(1) 有个优化，如果有多个二级索引的时候，优化器会使用&lt;code&gt;key_len&lt;/code&gt;最小的二级索引进行扫描。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;大表count()操作时费时间：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用近似值（如explain命令）&lt;/li&gt;
+&lt;li&gt;新建额外表保存计数信息&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        </item>
+        <item>
+        <title>MySQL锁</title>
+        <link>https://hifing.github.io/p/mysql%E9%94%81/</link>
+        <pubDate>Fri, 21 Apr 2023 14:47:17 +0800</pubDate>
+        
+        <guid>https://hifing.github.io/p/mysql%E9%94%81/</guid>
+        <description></description>
+        </item>
+        
+    </channel>
+</rss>

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='MySQL结构 MySQL的一个设计思想：如果内存够用，就要多利用内存，尽量减少磁盘访问。
+一条select语句的执行流程 连接器负责与客户端进行TCP三次握手，校验用户名密码，读取用户身份与操作权限。
+此处的查询缓存是在Server层执行的，并不是存储引擎中的buffer pool。当数据表频繁更新，或者查询的数据非常庞大时，缓存命中率可能不会很高，考虑到Server层的缓存实用性不大，因此，从MySQL 8.0 开始，执行一条 SQL 查询语句，不会再在Server层中执行查询缓存的步骤了。
+在执行SQL语句前，先由解析器对SQL语句进行解析，该步骤分为词法分析和语法分析。其中，在词法分析时，MySQL根据SQL关键词构建SQL语法树；语法分析时，解析器会根据语法规则，判断输入的 SQL 语句是否满足 MySQL 语法，比如，把from写成form。
+在执行SQL语句时，会分为以下三个阶段：
+预处理：检查SQL中的表或者字段是否存在，将*扩展为表上所有的列。
+优化：优化器负责将SQL查询语句的执行方案确定下来。
+执行：（以select * from product where id = 1;为例）
+优化的访问类型为const（常量查询，此外还有all、range等），首次查询调用read_first_record函数指针指向的函数，让存储引擎读取符合条件的第一条记录；
+通过主键索引的B&#43;树定位第一条记录；
+执行器（Server层）判断记录是否符合查询条件；
+查询过程为while循环，调用read_record函数指针指向的函数，因为是const访问类型，该指针指向-1，查询结束。
+索引下推对执行阶段的优化 使用索引下推（MySQL 5.6 以后）能减少二级索引在查询时的回表操作，提高效率，它将Server层部分负责的任务交给引擎层去处理。
+以select * from t_user where age &amp;gt; 20 and reward = 100000;为例（已建立age和reward的联合索引）：
+联合索引遇到范围查找会停止匹配，此SQL仅age能使用联合索引，当开启索引下推时，根据二级索引查询获取到的一条记录，引擎层直接判断reward是否符合条件，若不符合，则直接舍弃。（若不开启，则需要先进行回表操作，把完整数据反馈至Server层，由Server层判断）
+InnoDB和MyISAM的不同 MyISAM 只有表级锁，而 InnoDB 支持行级锁和表级锁，默认为行级锁。
+MyISAM 不提供事务支持。InnoDB 提供事务支持，实现了 SQL 标准定义了四个隔离级别，具有提交和回滚事务的能力。并且，InnoDB 默认使用的可重读隔离级别是可以解决幻读问题发生的（基于 MVCC 和 Next-Key Lock）。
+MyISAM 不支持外键，而 InnoDB 支持。
+使用 InnoDB 的数据库在异常崩溃后，数据库重新启动的时候会保证数据库恢复到崩溃前的状态。这个恢复的过程依赖于 redo log 。MyISAM不支持。'><title>MySQL基础</title>
+
+<link rel='canonical' href='https://hifing.github.io/p/mysql%E5%9F%BA%E7%A1%80/'>
+
+<link rel="stylesheet" href="/scss/style.min.ac77dcf8b111b51da39a92990f431923f210f3876d85798a2125667f96dc33a4.css"><meta property='og:title' content='MySQL基础'>
+<meta property='og:description' content='MySQL结构 MySQL的一个设计思想：如果内存够用，就要多利用内存，尽量减少磁盘访问。
+一条select语句的执行流程 连接器负责与客户端进行TCP三次握手，校验用户名密码，读取用户身份与操作权限。
+此处的查询缓存是在Server层执行的，并不是存储引擎中的buffer pool。当数据表频繁更新，或者查询的数据非常庞大时，缓存命中率可能不会很高，考虑到Server层的缓存实用性不大，因此，从MySQL 8.0 开始，执行一条 SQL 查询语句，不会再在Server层中执行查询缓存的步骤了。
+在执行SQL语句前，先由解析器对SQL语句进行解析，该步骤分为词法分析和语法分析。其中，在词法分析时，MySQL根据SQL关键词构建SQL语法树；语法分析时，解析器会根据语法规则，判断输入的 SQL 语句是否满足 MySQL 语法，比如，把from写成form。
+在执行SQL语句时，会分为以下三个阶段：
+预处理：检查SQL中的表或者字段是否存在，将*扩展为表上所有的列。
+优化：优化器负责将SQL查询语句的执行方案确定下来。
+执行：（以select * from product where id = 1;为例）
+优化的访问类型为const（常量查询，此外还有all、range等），首次查询调用read_first_record函数指针指向的函数，让存储引擎读取符合条件的第一条记录；
+通过主键索引的B&#43;树定位第一条记录；
+执行器（Server层）判断记录是否符合查询条件；
+查询过程为while循环，调用read_record函数指针指向的函数，因为是const访问类型，该指针指向-1，查询结束。
+索引下推对执行阶段的优化 使用索引下推（MySQL 5.6 以后）能减少二级索引在查询时的回表操作，提高效率，它将Server层部分负责的任务交给引擎层去处理。
+以select * from t_user where age &amp;gt; 20 and reward = 100000;为例（已建立age和reward的联合索引）：
+联合索引遇到范围查找会停止匹配，此SQL仅age能使用联合索引，当开启索引下推时，根据二级索引查询获取到的一条记录，引擎层直接判断reward是否符合条件，若不符合，则直接舍弃。（若不开启，则需要先进行回表操作，把完整数据反馈至Server层，由Server层判断）
+InnoDB和MyISAM的不同 MyISAM 只有表级锁，而 InnoDB 支持行级锁和表级锁，默认为行级锁。
+MyISAM 不提供事务支持。InnoDB 提供事务支持，实现了 SQL 标准定义了四个隔离级别，具有提交和回滚事务的能力。并且，InnoDB 默认使用的可重读隔离级别是可以解决幻读问题发生的（基于 MVCC 和 Next-Key Lock）。
+MyISAM 不支持外键，而 InnoDB 支持。
+使用 InnoDB 的数据库在异常崩溃后，数据库重新启动的时候会保证数据库恢复到崩溃前的状态。这个恢复的过程依赖于 redo log 。MyISAM不支持。'>
+<meta property='og:url' content='https://hifing.github.io/p/mysql%E5%9F%BA%E7%A1%80/'>
+<meta property='og:site_name' content='Welcome to Barry&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2023-04-21T14:47:17&#43;08:00'/><meta property='article:modified_time' content='2023-04-21T14:47:17&#43;08:00'/>
+<meta name="twitter:title" content="MySQL基础">
+<meta name="twitter:description" content="MySQL结构 MySQL的一个设计思想：如果内存够用，就要多利用内存，尽量减少磁盘访问。
+一条select语句的执行流程 连接器负责与客户端进行TCP三次握手，校验用户名密码，读取用户身份与操作权限。
+此处的查询缓存是在Server层执行的，并不是存储引擎中的buffer pool。当数据表频繁更新，或者查询的数据非常庞大时，缓存命中率可能不会很高，考虑到Server层的缓存实用性不大，因此，从MySQL 8.0 开始，执行一条 SQL 查询语句，不会再在Server层中执行查询缓存的步骤了。
+在执行SQL语句前，先由解析器对SQL语句进行解析，该步骤分为词法分析和语法分析。其中，在词法分析时，MySQL根据SQL关键词构建SQL语法树；语法分析时，解析器会根据语法规则，判断输入的 SQL 语句是否满足 MySQL 语法，比如，把from写成form。
+在执行SQL语句时，会分为以下三个阶段：
+预处理：检查SQL中的表或者字段是否存在，将*扩展为表上所有的列。
+优化：优化器负责将SQL查询语句的执行方案确定下来。
+执行：（以select * from product where id = 1;为例）
+优化的访问类型为const（常量查询，此外还有all、range等），首次查询调用read_first_record函数指针指向的函数，让存储引擎读取符合条件的第一条记录；
+通过主键索引的B&#43;树定位第一条记录；
+执行器（Server层）判断记录是否符合查询条件；
+查询过程为while循环，调用read_record函数指针指向的函数，因为是const访问类型，该指针指向-1，查询结束。
+索引下推对执行阶段的优化 使用索引下推（MySQL 5.6 以后）能减少二级索引在查询时的回表操作，提高效率，它将Server层部分负责的任务交给引擎层去处理。
+以select * from t_user where age &amp;gt; 20 and reward = 100000;为例（已建立age和reward的联合索引）：
+联合索引遇到范围查找会停止匹配，此SQL仅age能使用联合索引，当开启索引下推时，根据二级索引查询获取到的一条记录，引擎层直接判断reward是否符合条件，若不符合，则直接舍弃。（若不开启，则需要先进行回表操作，把完整数据反馈至Server层，由Server层判断）
+InnoDB和MyISAM的不同 MyISAM 只有表级锁，而 InnoDB 支持行级锁和表级锁，默认为行级锁。
+MyISAM 不提供事务支持。InnoDB 提供事务支持，实现了 SQL 标准定义了四个隔离级别，具有提交和回滚事务的能力。并且，InnoDB 默认使用的可重读隔离级别是可以解决幻读问题发生的（基于 MVCC 和 Next-Key Lock）。
+MyISAM 不支持外键，而 InnoDB 支持。
+使用 InnoDB 的数据库在异常崩溃后，数据库重新启动的时候会保证数据库恢复到崩溃前的状态。这个恢复的过程依赖于 redo log 。MyISAM不支持。">
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hudfc38dfe440c7d22d9f3dacb04f8b0ef_10461_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Welcome to Barry&#39;s Blog</a></h1>
+            <h2 class="site-description">In case I don&#39;t see you, good morning, good afternoon and good night.</h2>
+        </div>
+    </header><ol class="social-menu">
+            
+                <li>
+                    <a 
+                        href='https://github.com/HiFing'
+                        target="_blank"
+                        title="GitHub"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+        </ol><ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/%E7%AE%80%E4%BB%8B/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>简介</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归类</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/%E9%93%BE%E6%8E%A5/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" />
+  <path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" />
+</svg>
+
+
+
+                
+                <span>链接</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section">
+            
+            
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>Dark Mode</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+<main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/mysql/" style="background-color: #2a9d8f; color: #fff;">
+                MySQL
+            </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/mysql%E5%9F%BA%E7%A1%80/">MySQL基础</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Apr 21, 2023</time>
+            </div>
+        
+
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time class="article-time--reading">
+                    1 minute read
+                </time>
+            </div>
+        
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <h1 id="mysql结构">MySQL结构</h1>
+<p>MySQL的一个设计思想：<strong>如果内存够用，就要多利用内存，尽量减少磁盘访问</strong>。</p>
+<p><img src="/assets/img/java/mysqlprocess.webp"
+	
+	
+	
+	loading="lazy"
+	
+		alt="MySQL结构图"
+	
+	
+></p>
+<h2 id="一条select语句的执行流程">一条select语句的执行流程</h2>
+<ul>
+<li>
+<p><strong>连接器</strong>负责与客户端进行TCP三次握手，校验用户名密码，读取用户身份与操作权限。</p>
+</li>
+<li>
+<p><strong>此处的查询缓存是在Server层执行的，并不是存储引擎中的buffer pool</strong>。当数据表频繁更新，或者查询的数据非常庞大时，缓存命中率可能不会很高，考虑到Server层的缓存实用性不大，因此，从MySQL 8.0 开始，执行一条 SQL 查询语句，不会再在Server层中执行查询缓存的步骤了。</p>
+</li>
+<li>
+<p>在执行SQL语句前，先由<strong>解析器</strong>对SQL语句进行解析，该步骤分为词法分析和语法分析。其中，在词法分析时，MySQL根据SQL关键词构建SQL语法树；语法分析时，解析器会根据语法规则，判断输入的 SQL 语句<strong>是否满足 MySQL 语法</strong>，比如，把<code>from</code>写成<code>form</code>。</p>
+</li>
+<li>
+<p>在执行SQL语句时，会分为以下三个阶段：</p>
+</li>
+</ul>
+<blockquote>
+<ul>
+<li>
+<p>预处理：检查SQL中的<strong>表或者字段是否存在</strong>，将<code>*</code>扩展为表上所有的列。</p>
+</li>
+<li>
+<p>优化：优化器负责将SQL查询语句的执行方案确定下来。</p>
+</li>
+<li>
+<p>执行：（以<code>select * from product where id = 1;</code>为例）</p>
+<ul>
+<li>
+<p>优化的访问类型为const（常量查询，此外还有all、range等），首次查询调用<code>read_first_record</code>函数指针指向的函数，让存储引擎读取符合条件的第一条记录；</p>
+</li>
+<li>
+<p>通过主键索引的B+树定位第一条记录；</p>
+</li>
+<li>
+<p>执行器（Server层）判断记录是否符合查询条件；</p>
+</li>
+<li>
+<p>查询过程为while循环，调用<code>read_record</code>函数指针指向的函数，因为是const访问类型，该指针指向-1，查询结束。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="索引下推对执行阶段的优化">索引下推对执行阶段的优化</h3>
+<p>使用索引下推（MySQL 5.6 以后）能<strong>减少二级索引在查询时的回表操作</strong>，提高效率，它将Server层部分负责的任务<strong>交给引擎层去处理</strong>。</p>
+<p>以<code>select * from t_user where age &gt; 20 and reward = 100000;</code>为例（已建立<code>age</code>和<code>reward</code>的联合索引）：</p>
+<p>联合索引遇到范围查找会停止匹配，此SQL仅<code>age</code>能使用联合索引，当开启索引下推时，根据二级索引查询获取到的一条记录，引擎层直接判断<code>reward</code>是否符合条件，若不符合，则直接舍弃。（若不开启，则需要先进行<strong>回表</strong>操作，把完整数据反馈至Server层，由Server层判断）</p>
+</blockquote>
+<h1 id="innodb和myisam的不同">InnoDB和MyISAM的不同</h1>
+<ul>
+<li>
+<p>MyISAM 只有表级锁，而 <strong>InnoDB 支持行级锁和表级锁</strong>，默认为行级锁。</p>
+</li>
+<li>
+<p>MyISAM 不提供<strong>事务</strong>支持。InnoDB 提供事务支持，实现了 SQL 标准定义了四个隔离级别，具有提交和回滚事务的能力。并且，InnoDB 默认使用的可重读隔离级别是可以解决幻读问题发生的（基于 MVCC 和 Next-Key Lock）。</p>
+</li>
+<li>
+<p>MyISAM 不支持<strong>外键</strong>，而 InnoDB 支持。</p>
+</li>
+<li>
+<p>使用 InnoDB 的数据库在异常崩溃后，数据库重新启动的时候会保证数据库恢复到崩溃前的状态。这个恢复的过程依赖于 <code>redo log</code> 。MyISAM不支持。</p>
+</li>
+<li>
+<p>虽然 MyISAM 引擎和 InnoDB 引擎都是使用 B+Tree 作为索引结构，但是两者的实现方式不太一样。</p>
+<p>InnoDB 引擎中，其数据文件本身就是索引文件。相比 MyISAM，索引文件和数据文件是分离的，其表数据文件本身就是按 B+Tree 组织的一个索引结构，树的叶节点 data 域保存了完整的数据记录。</p>
+</li>
+</ul>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">Related content</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/p/mysql%E9%94%81/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">MySQL锁</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/mysql%E6%97%A5%E5%BF%97/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">MySQL日志</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/mysql%E7%B4%A2%E5%BC%95/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">MySQL索引</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/mysql%E4%BA%8B%E5%8A%A1/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">MySQL事务</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Welcome to Barry&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.12.0">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">Table of contents</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#一条select语句的执行流程">一条select语句的执行流程</a>
+      <ol>
+        <li><a href="#索引下推对执行阶段的优化">索引下推对执行阶段的优化</a></li>
+      </ol>
+    </li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
