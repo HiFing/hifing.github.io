@@ -1,4 +1,4 @@
-baseurl: https://example.com
+baseurl: https://hifing.github.io
 languageCode: en-us
 theme: hugo-theme-stack
 paginate: 5
@@ -210,7 +210,7 @@ markup:
     goldmark:
         renderer:
             ## Set to true if you have HTML content inside Markdown
-            unsafe: false
+            unsafe: true
     tableOfContents:
         endLevel: 4
         ordered: true
