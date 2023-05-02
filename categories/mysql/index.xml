@@ -72,7 +72,6 @@ case 2:&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h1 id=&#34;heading&#34;&gt;&lt;/h1&gt;
 &lt;h3 id=&#34;readview和mvcc&#34;&gt;ReadView和MVCC&lt;/h3&gt;
 &lt;p&gt;ReadView结构：&lt;/p&gt;
 &lt;div align=&#34;center&#34;&gt;&lt;img width=400px src=../../assets/img/readview结构.webp /&gt;&lt;/div&gt;
