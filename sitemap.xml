@@ -3,12 +3,24 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://hifing.github.io/categories/</loc>
-    <lastmod>2023-04-21T14:47:17+08:00</lastmod>
+    <lastmod>2023-04-29T17:59:47+08:00</lastmod>
+  </url><url>
+    <loc>https://hifing.github.io/categories/golang/</loc>
+    <lastmod>2023-04-29T17:59:47+08:00</lastmod>
+  </url><url>
+    <loc>https://hifing.github.io/p/golang%E5%9F%BA%E7%A1%80/</loc>
+    <lastmod>2023-04-29T17:59:47+08:00</lastmod>
+  </url><url>
+    <loc>https://hifing.github.io/post/</loc>
+    <lastmod>2023-04-29T17:59:47+08:00</lastmod>
+  </url><url>
+    <loc>https://hifing.github.io/</loc>
+    <lastmod>2023-04-29T17:59:47+08:00</lastmod>
   </url><url>
     <loc>https://hifing.github.io/categories/mysql/</loc>
     <lastmod>2023-04-21T14:47:17+08:00</lastmod>
   </url><url>
-    <loc>https://hifing.github.io/p/mysql%E4%BA%8B%E5%8A%A1/</loc>
+    <loc>https://hifing.github.io/p/mysql%E4%BA%8B%E5%8A%A1%E4%B8%8E%E9%94%81/</loc>
     <lastmod>2023-04-21T14:47:17+08:00</lastmod>
   </url><url>
     <loc>https://hifing.github.io/p/mysql%E5%9F%BA%E7%A1%80/</loc>
@@ -18,15 +30,6 @@
     <lastmod>2023-04-21T14:47:17+08:00</lastmod>
   </url><url>
     <loc>https://hifing.github.io/p/mysql%E7%B4%A2%E5%BC%95/</loc>
-    <lastmod>2023-04-21T14:47:17+08:00</lastmod>
-  </url><url>
-    <loc>https://hifing.github.io/p/mysql%E9%94%81/</loc>
-    <lastmod>2023-04-21T14:47:17+08:00</lastmod>
-  </url><url>
-    <loc>https://hifing.github.io/post/</loc>
-    <lastmod>2023-04-21T14:47:17+08:00</lastmod>
-  </url><url>
-    <loc>https://hifing.github.io/</loc>
     <lastmod>2023-04-21T14:47:17+08:00</lastmod>
   </url><url>
     <loc>https://hifing.github.io/categories/%E5%88%B7%E9%A2%98/</loc>
@@ -85,8 +88,6 @@
   </url><url>
     <loc>https://hifing.github.io/%E7%AE%80%E4%BB%8B/</loc>
     <lastmod>2020-10-09T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://hifing.github.io/categories/golang/</loc>
   </url><url>
     <loc>https://hifing.github.io/categories/java/</loc>
   </url><url>

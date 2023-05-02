@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='MySQL事务与锁 事务 事务特性与隔离级别 ACID 原子性（Atomicity）：一个事务中的所有操作，要么全部完成，要么全部不完成，不会结束在中间某个环节。（undo log保证） 一致性（Consistency）：事务操作前和操作后，数据满足完整性约束，数据库保持一致性状态。（通过A、I、D保证） 隔离性（Isolation）：多个事务同时使用相同的数据时，不会相互干扰，每个事务都有一个完整的数据空间，对其他并发事务是隔离的。（MVCC或锁保证） 持久性（Durability）：事务处理结束后，对数据的修改就是永久的，即便系统故障也不会丢失。（通过redo log保证） 隔离级别 并行事务处理时会发生的现象：脏读、不可重复读、幻读
+脏读：事务A读到了事务B未提交的数据。 不可重复读：在一个事务内多次读取同一个数据，如果出现前后两次读到的数据不一样的情况，就意味着发生了不可重复读现象。 幻读：在一个事务内多次查询某个符合查询条件的记录数量，如果出现前后两次查询到的记录数量不一样的情况，就意味着发生了幻读现象。 四个隔离级别
+读未提交（read uncommitted），指一个事务还没提交时，它做的变更就能被其他事务看到；（会出现脏读、不可重复读、幻读） 读提交（read committed），指一个事务提交之后，它做的变更才能被其他事务看到；（会出现不可重复读、幻读） 可重复读（repeatable read），指一个事务执行过程中看到的数据，一直跟这个事务启动时看到的数据是一致的，MySQL InnoDB 引擎的默认隔离级别；（会出现幻读） 串行化（serializable ）；会对记录加上读写锁，在多个事务对这条记录进行读写操作时，如果发生了读写冲突的时候，后访问的事务必须等前一个事务执行完成，才能继续执行； TIP
+对于「读提交」和「可重复读」隔离级别的事务来说，它们是通过 Read View 来实现的，它们的区别在于创建 Read View 的时机不同。「读提交」隔离级别是在「每个语句执行前」都会重新生成一个 Read View，而「可重复读」隔离级别是「启动事务时」生成一个 Read View，然后整个事务期间都在用这个 Read View。
+MySQL的可重复读隔离级别对幻读的处理（不能完全避免）
+针对快照读（普通 select 语句）：通过 MVCC 方式解决了幻读； 针对当前读（select &amp;hellip; for update 等语句）：通过 next-key lock（记录锁&#43;间隙锁）方式解决了幻读。 TIP
+什么情况下还是会出现幻读？ case 1: case 2:
+T1 时刻：事务 A 先执行「快照读语句」：select * from t_test where id &amp;gt; 100 得到了 3 条记录。 T2 时刻：事务 B 往插入一个 id= 200 的记录并提交； T3 时刻：事务 A 再执行「当前读语句」 select * from t_test where id &amp;gt; 100 for update 就会得到 4 条记录，此时也发生了幻读现象。 要避免这类特殊场景下发生幻读的现象的话，就是尽量在开启事务之后，马上执行 select &amp;hellip; for update 这类当前读的语句，因为它会对记录加 next-key lock，从而避免其他事务插入一条新记录。 ReadView和MVCC ReadView结构：'><title>MySQL事务与锁</title>
+
+<link rel='canonical' href='https://hifing.github.io/p/mysql%E4%BA%8B%E5%8A%A1%E4%B8%8E%E9%94%81/'>
+
+<link rel="stylesheet" href="/scss/style.min.ac77dcf8b111b51da39a92990f431923f210f3876d85798a2125667f96dc33a4.css"><meta property='og:title' content='MySQL事务与锁'>
+<meta property='og:description' content='MySQL事务与锁 事务 事务特性与隔离级别 ACID 原子性（Atomicity）：一个事务中的所有操作，要么全部完成，要么全部不完成，不会结束在中间某个环节。（undo log保证） 一致性（Consistency）：事务操作前和操作后，数据满足完整性约束，数据库保持一致性状态。（通过A、I、D保证） 隔离性（Isolation）：多个事务同时使用相同的数据时，不会相互干扰，每个事务都有一个完整的数据空间，对其他并发事务是隔离的。（MVCC或锁保证） 持久性（Durability）：事务处理结束后，对数据的修改就是永久的，即便系统故障也不会丢失。（通过redo log保证） 隔离级别 并行事务处理时会发生的现象：脏读、不可重复读、幻读
+脏读：事务A读到了事务B未提交的数据。 不可重复读：在一个事务内多次读取同一个数据，如果出现前后两次读到的数据不一样的情况，就意味着发生了不可重复读现象。 幻读：在一个事务内多次查询某个符合查询条件的记录数量，如果出现前后两次查询到的记录数量不一样的情况，就意味着发生了幻读现象。 四个隔离级别
+读未提交（read uncommitted），指一个事务还没提交时，它做的变更就能被其他事务看到；（会出现脏读、不可重复读、幻读） 读提交（read committed），指一个事务提交之后，它做的变更才能被其他事务看到；（会出现不可重复读、幻读） 可重复读（repeatable read），指一个事务执行过程中看到的数据，一直跟这个事务启动时看到的数据是一致的，MySQL InnoDB 引擎的默认隔离级别；（会出现幻读） 串行化（serializable ）；会对记录加上读写锁，在多个事务对这条记录进行读写操作时，如果发生了读写冲突的时候，后访问的事务必须等前一个事务执行完成，才能继续执行； TIP
+对于「读提交」和「可重复读」隔离级别的事务来说，它们是通过 Read View 来实现的，它们的区别在于创建 Read View 的时机不同。「读提交」隔离级别是在「每个语句执行前」都会重新生成一个 Read View，而「可重复读」隔离级别是「启动事务时」生成一个 Read View，然后整个事务期间都在用这个 Read View。
+MySQL的可重复读隔离级别对幻读的处理（不能完全避免）
+针对快照读（普通 select 语句）：通过 MVCC 方式解决了幻读； 针对当前读（select &amp;hellip; for update 等语句）：通过 next-key lock（记录锁&#43;间隙锁）方式解决了幻读。 TIP
+什么情况下还是会出现幻读？ case 1: case 2:
+T1 时刻：事务 A 先执行「快照读语句」：select * from t_test where id &amp;gt; 100 得到了 3 条记录。 T2 时刻：事务 B 往插入一个 id= 200 的记录并提交； T3 时刻：事务 A 再执行「当前读语句」 select * from t_test where id &amp;gt; 100 for update 就会得到 4 条记录，此时也发生了幻读现象。 要避免这类特殊场景下发生幻读的现象的话，就是尽量在开启事务之后，马上执行 select &amp;hellip; for update 这类当前读的语句，因为它会对记录加 next-key lock，从而避免其他事务插入一条新记录。 ReadView和MVCC ReadView结构：'>
+<meta property='og:url' content='https://hifing.github.io/p/mysql%E4%BA%8B%E5%8A%A1%E4%B8%8E%E9%94%81/'>
+<meta property='og:site_name' content='Welcome to Barry&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2023-04-21T14:47:17&#43;08:00'/><meta property='article:modified_time' content='2023-04-21T14:47:17&#43;08:00'/>
+<meta name="twitter:title" content="MySQL事务与锁">
+<meta name="twitter:description" content="MySQL事务与锁 事务 事务特性与隔离级别 ACID 原子性（Atomicity）：一个事务中的所有操作，要么全部完成，要么全部不完成，不会结束在中间某个环节。（undo log保证） 一致性（Consistency）：事务操作前和操作后，数据满足完整性约束，数据库保持一致性状态。（通过A、I、D保证） 隔离性（Isolation）：多个事务同时使用相同的数据时，不会相互干扰，每个事务都有一个完整的数据空间，对其他并发事务是隔离的。（MVCC或锁保证） 持久性（Durability）：事务处理结束后，对数据的修改就是永久的，即便系统故障也不会丢失。（通过redo log保证） 隔离级别 并行事务处理时会发生的现象：脏读、不可重复读、幻读
+脏读：事务A读到了事务B未提交的数据。 不可重复读：在一个事务内多次读取同一个数据，如果出现前后两次读到的数据不一样的情况，就意味着发生了不可重复读现象。 幻读：在一个事务内多次查询某个符合查询条件的记录数量，如果出现前后两次查询到的记录数量不一样的情况，就意味着发生了幻读现象。 四个隔离级别
+读未提交（read uncommitted），指一个事务还没提交时，它做的变更就能被其他事务看到；（会出现脏读、不可重复读、幻读） 读提交（read committed），指一个事务提交之后，它做的变更才能被其他事务看到；（会出现不可重复读、幻读） 可重复读（repeatable read），指一个事务执行过程中看到的数据，一直跟这个事务启动时看到的数据是一致的，MySQL InnoDB 引擎的默认隔离级别；（会出现幻读） 串行化（serializable ）；会对记录加上读写锁，在多个事务对这条记录进行读写操作时，如果发生了读写冲突的时候，后访问的事务必须等前一个事务执行完成，才能继续执行； TIP
+对于「读提交」和「可重复读」隔离级别的事务来说，它们是通过 Read View 来实现的，它们的区别在于创建 Read View 的时机不同。「读提交」隔离级别是在「每个语句执行前」都会重新生成一个 Read View，而「可重复读」隔离级别是「启动事务时」生成一个 Read View，然后整个事务期间都在用这个 Read View。
+MySQL的可重复读隔离级别对幻读的处理（不能完全避免）
+针对快照读（普通 select 语句）：通过 MVCC 方式解决了幻读； 针对当前读（select &amp;hellip; for update 等语句）：通过 next-key lock（记录锁&#43;间隙锁）方式解决了幻读。 TIP
+什么情况下还是会出现幻读？ case 1: case 2:
+T1 时刻：事务 A 先执行「快照读语句」：select * from t_test where id &amp;gt; 100 得到了 3 条记录。 T2 时刻：事务 B 往插入一个 id= 200 的记录并提交； T3 时刻：事务 A 再执行「当前读语句」 select * from t_test where id &amp;gt; 100 for update 就会得到 4 条记录，此时也发生了幻读现象。 要避免这类特殊场景下发生幻读的现象的话，就是尽量在开启事务之后，马上执行 select &amp;hellip; for update 这类当前读的语句，因为它会对记录加 next-key lock，从而避免其他事务插入一条新记录。 ReadView和MVCC ReadView结构：">
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hudfc38dfe440c7d22d9f3dacb04f8b0ef_10461_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Welcome to Barry&#39;s Blog</a></h1>
+            <h2 class="site-description">In case I don&#39;t see you, good morning, good afternoon and good night.</h2>
+        </div>
+    </header><ol class="social-menu">
+            
+                <li>
+                    <a 
+                        href='https://github.com/HiFing'
+                        target="_blank"
+                        title="GitHub"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+        </ol><ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/%E7%AE%80%E4%BB%8B/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>简介</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归类</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/%E9%93%BE%E6%8E%A5/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" />
+  <path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" />
+</svg>
+
+
+
+                
+                <span>链接</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section">
+            
+            
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>Dark Mode</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+<main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/mysql/" style="background-color: #2a9d8f; color: #fff;">
+                MySQL
+            </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/mysql%E4%BA%8B%E5%8A%A1%E4%B8%8E%E9%94%81/">MySQL事务与锁</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Apr 21, 2023</time>
+            </div>
+        
+
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time class="article-time--reading">
+                    2 minute read
+                </time>
+            </div>
+        
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <h1 id="mysql事务与锁">MySQL事务与锁</h1>
+<h2 id="事务">事务</h2>
+<h3 id="事务特性与隔离级别">事务特性与隔离级别</h3>
+<h4 id="acid">ACID</h4>
+<ul>
+<li>原子性（Atomicity）：一个事务中的所有操作，要么全部完成，要么全部不完成，不会结束在中间某个环节。（undo log保证）</li>
+<li>一致性（Consistency）：事务操作前和操作后，数据满足完整性约束，数据库保持一致性状态。（通过A、I、D保证）</li>
+<li>隔离性（Isolation）：多个事务同时使用相同的数据时，不会相互干扰，每个事务都有一个完整的数据空间，对其他并发事务是隔离的。（MVCC或锁保证）</li>
+<li>持久性（Durability）：事务处理结束后，对数据的修改就是永久的，即便系统故障也不会丢失。（通过redo log保证）</li>
+</ul>
+<h4 id="隔离级别">隔离级别</h4>
+<ul>
+<li>
+<p>并行事务处理时会发生的现象：脏读、不可重复读、幻读</p>
+<ul>
+<li>脏读：事务A读到了事务B未提交的数据。</li>
+<li>不可重复读：在一个事务内多次读取同一个数据，如果出现前后两次读到的数据不一样的情况，就意味着发生了不可重复读现象。</li>
+<li>幻读：在一个事务内多次查询某个符合查询条件的记录数量，如果出现前后两次查询到的记录数量不一样的情况，就意味着发生了幻读现象。</li>
+</ul>
+</li>
+<li>
+<p>四个隔离级别</p>
+<ul>
+<li>读未提交（read uncommitted），指一个事务还没提交时，它做的变更就能被其他事务看到；（会出现脏读、不可重复读、幻读）</li>
+<li>读提交（read committed），指一个事务提交之后，它做的变更才能被其他事务看到；（会出现不可重复读、幻读）</li>
+<li><strong>可重复读</strong>（repeatable read），指一个事务执行过程中看到的数据，一直跟这个事务启动时看到的数据是一致的，MySQL InnoDB 引擎的默认隔离级别；（会出现幻读）</li>
+<li>串行化（serializable ）；会对记录加上读写锁，在多个事务对这条记录进行读写操作时，如果发生了读写冲突的时候，后访问的事务必须等前一个事务执行完成，才能继续执行；</li>
+</ul>
+<blockquote>
+<p>TIP</p>
+<p>对于「读提交」和「可重复读」隔离级别的事务来说，它们是通过 Read View 来实现的，它们的区别在于创建 Read View 的时机不同。<strong>「读提交」隔离级别是在「每个语句执行前」都会重新生成一个 Read View，而「可重复读」隔离级别是「启动事务时」生成一个 Read View</strong>，然后整个事务期间都在用这个 Read View。</p>
+</blockquote>
+</li>
+<li>
+<p>MySQL的可重复读隔离级别对幻读的处理（不能完全避免）</p>
+<ul>
+<li>针对<strong>快照读</strong>（普通 select 语句）：通过 MVCC 方式解决了幻读；</li>
+<li>针对<strong>当前读</strong>（select &hellip; for update 等语句）：通过 next-key lock（记录锁+间隙锁）方式解决了幻读。</li>
+</ul>
+<blockquote>
+<p>TIP</p>
+<p>什么情况下还是会出现幻读？
+case 1:<img src="/assets/img/%e5%b9%bb%e8%af%bb%e5%8f%91%e7%94%9f1.drawio.webp"
+	
+	
+	
+	loading="lazy"
+	
+	
+>
+case 2:</p>
+<ul>
+<li>T1 时刻：事务 A 先执行「快照读语句」：select * from t_test where id &gt; 100 得到了 3 条记录。</li>
+<li>T2 时刻：事务 B 往插入一个 id= 200 的记录并提交；</li>
+<li>T3 时刻：事务 A 再执行「当前读语句」 select * from t_test where id &gt; 100 for update 就会得到 4 条记录，此时也发生了幻读现象。
+要避免这类特殊场景下发生幻读的现象的话，就是尽量在开启事务之后，马上执行 select &hellip; for update 这类当前读的语句，因为它会对记录加 next-key lock，从而避免其他事务插入一条新记录。</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+<h1 id="heading"></h1>
+<h3 id="readview和mvcc">ReadView和MVCC</h3>
+<p>ReadView结构：</p>
+<div align="center"><img width=400px src=../../assets/img/readview结构.webp /></div>
+<blockquote>
+<p>TIP</p>
+<p>一个事务去访问记录的时候，除了自己的更新记录总是可见之外，还有这几种情况：</p>
+<ul>
+<li>如果记录的 trx_id 值小于 Read View 中的 min_trx_id 值，表示这个版本的记录是在创建 Read View 前已经提交的事务生成的，所以该版本的记录对当前事务可见。</li>
+<li>如果记录的 trx_id 值大于等于 Read View 中的 max_trx_id 值，表示这个版本的记录是在创建 Read View 后才启动的事务生成的，所以该版本的记录对当前事务不可见。</li>
+<li>如果记录的 trx_id 值在 Read View 的 min_trx_id 和 max_trx_id 之间，需要判断 trx_id 是否在 m_ids 列表中：
+<ul>
+<li>如果记录的 trx_id 在 m_ids 列表中，表示生成该版本记录的活跃事务依然活跃着（还没提交事务），所以该版本的记录对当前事务不可见。</li>
+<li>如果记录的 trx_id 不在 m_ids列表中，表示生成该版本记录的活跃事务已经被提交，所以该版本的记录对当前事务可见。</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p>聚簇索引隐藏列：</p>
+<div align="center"><img width=400px src=../../assets/img/隐藏列.webp /></div>
+<blockquote>
+<p>roll_ptr指向下一条undo log，下一条undo log也是这样的结构，这样，就构成了一条版本链。</p>
+</blockquote>
+<h2 id="锁">锁</h2>
+<h3 id="mysql有哪些锁">MySQL有哪些锁</h3>
+<ul>
+<li>全局锁</li>
+<li>表级锁
+<ul>
+<li>表锁</li>
+<li>元数据锁：MDL 是为了保证当用户对表执行 CRUD 操作时，防止其他线程对这个表结构做了变更。MDL 是在事务提交后才会释放，这意味着事务执行期间，MDL 是一直持有的，这主要是考虑到长事务中对数据表的结构修改会影响其他事务的执行。（读读兼容、读写互斥、写写互斥）</li>
+<li>意向锁：对表内某些记录加<strong>行级</strong>读写锁之前会先申请<strong>表级意向锁</strong>。意向锁的目的是为了快速判断表里是否有记录被加锁。
+意向共享锁和意向独占锁是表级锁，不会和行级的共享锁和独占锁发生冲突，而且<strong>意向锁之间也不会发生冲突</strong>，只会和表读锁和表写锁发生冲突。</li>
+<li>AUTO-INC锁：表里的主键通常都会设置成自增的，这是通过对主键字段声明 AUTO_INCREMENT 属性实现的。AUTO-INC 锁是特殊的表锁机制，锁不是再一个事务提交后才释放，而是再执行完插入语句后就会立即释放。</li>
+</ul>
+</li>
+<li>行级锁
+InnoDB 引擎是支持行级锁的，而 MyISAM 引擎并不支持行级锁。
+<ul>
+<li>Record Lock</li>
+<li>Gap Lock</li>
+<li>Nexy-Key Lock：Record Lock + Gap Lock 的组合，锁定一个范围，并且锁定记录本身。</li>
+<li>插入意向锁（注意和表级锁中的意向锁进行区分）：它是一种<strong>特殊的间隙锁</strong>，属于行级别锁。两个事务却不能在同一时间内，一个拥有间隙锁，另一个拥有该间隙区间内的插入意向锁。</li>
+</ul>
+</li>
+</ul>
+<h3 id="mysql是怎么加锁的">MySQL是怎么加锁的</h3>
+<p><a class="link" href="https://xiaolincoding.com/mysql/lock/how_to_lock.html#mysql-%E6%98%AF%E6%80%8E%E4%B9%88%E5%8A%A0%E8%A1%8C%E7%BA%A7%E9%94%81%E7%9A%84"  target="_blank" rel="noopener"
+    >几个案例</a></p>
+<p>注意非唯一索引加锁情况。</p>
+<blockquote>
+<p>select * from user where age &gt;= 22  for update;
+<img src="/assets/img/%e9%9d%9e%e5%94%af%e4%b8%80%e7%b4%a2%e5%bc%95%e8%8c%83%e5%9b%b4%e6%9f%a5%e8%af%a2age%e5%a4%a7%e4%ba%8e%e7%ad%89%e4%ba%8e22.drawio.webp"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+</blockquote>
+<blockquote>
+<p>TIP</p>
+<p>MySQL 行级锁的加锁规则：</p>
+<ul>
+<li>唯一索引等值查询：
+当查询的记录是「存在」的，在索引树上定位到这一条记录后，将该记录的索引中的 next-key lock 会退化成「记录锁」。
+当查询的记录是「不存在」的，在索引树找到第一条大于该查询记录的记录后，将该记录的索引中的 next-key lock 会退化成「间隙锁」。</li>
+<li>非唯一索引等值查询：
+当查询的记录「存在」时，由于不是唯一索引，所以肯定存在索引值相同的记录，于是非唯一索引等值查询的过程是一个扫描的过程，直到扫描到第一个不符合条件的二级索引记录就停止扫描，然后在扫描的过程中，对扫描到的二级索引记录加的是 next-key 锁，而对于第一个不符合条件的二级索引记录，该二级索引的 next-key 锁会退化成间隙锁。同时，在符合查询条件的记录的<strong>主键索引上加记录锁</strong>。
+当查询的记录「不存在」时，扫描到第一条不符合条件的二级索引记录，该二级索引的 next-key 锁会退化成间隙锁。因为不存在满足查询条件的记录，所以不会对主键索引加锁。</li>
+</ul>
+</blockquote>
+<h3 id="mysql死锁了怎么办">MySQL死锁了怎么办</h3>
+<h4 id="原因">原因</h4>
+<p><strong>间隙锁</strong>的意义只在于阻止区间被插入，因此是可以共存的。一个事务获取的间隙锁不会阻止另一个事务获取同一个间隙范围的间隙锁。
+这里的共同间隙包括两种场景：</p>
+<ul>
+<li>其一是两个间隙锁的间隙区间完全一样；</li>
+<li>其二是一个间隙锁包含的间隙区间是另一个间隙锁包含间隙区间的子集。</li>
+</ul>
+<p>但是有一点要注意，<strong>next-key lock 是包含间隙锁+记录锁的</strong>，如果一个事务获取了 X 型的 next-key lock，那么另外一个事务在获取相同范围的 X 型的 next-key lock 时，是会被阻塞的，即记录锁要考虑 X 型与 S 型关系。</p>
+<p><a class="link" href="https://xiaolincoding.com/mysql/lock/deadlock.html#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E4%BA%A7%E7%94%9F%E6%AD%BB%E9%94%81"  target="_blank" rel="noopener"
+    >死锁案例</a></p>
+<p>插入意向锁与间隙锁是冲突的，所以当其它事务持有该间隙的间隙锁时，需要等待<strong>其它事务</strong>释放间隙锁之后，才能获取到插入意向锁。间隙锁与间隙锁之间是兼容的。</p>
+<blockquote>
+<p>插入意向锁只在<strong>并发插入</strong>时会用到。</p>
+</blockquote>
+<h4 id="死锁避免">死锁避免</h4>
+<p>死锁的四个必要条件：<strong>互斥、占有且等待、不可强占用、循环等待</strong>。只要系统发生死锁，这些条件必然成立，但是只要破坏任意一个条件就死锁就不会成立。
+因此可以：</p>
+<ul>
+<li>设置事务超时时间</li>
+<li>开启主动死锁检测</li>
+</ul>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">Related content</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/p/mysql%E6%97%A5%E5%BF%97/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">MySQL日志</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/mysql%E5%9F%BA%E7%A1%80/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">MySQL基础</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/p/mysql%E7%B4%A2%E5%BC%95/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">MySQL索引</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Welcome to Barry&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.12.0">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">Table of contents</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#事务">事务</a>
+      <ol>
+        <li><a href="#事务特性与隔离级别">事务特性与隔离级别</a>
+          <ol>
+            <li><a href="#acid">ACID</a></li>
+            <li><a href="#隔离级别">隔离级别</a></li>
+          </ol>
+        </li>
+      </ol>
+    </li>
+  </ol>
+
+  <ol>
+    <li>
+      <ol>
+        <li><a href="#readview和mvcc">ReadView和MVCC</a></li>
+      </ol>
+    </li>
+    <li><a href="#锁">锁</a>
+      <ol>
+        <li><a href="#mysql有哪些锁">MySQL有哪些锁</a></li>
+        <li><a href="#mysql是怎么加锁的">MySQL是怎么加锁的</a></li>
+        <li><a href="#mysql死锁了怎么办">MySQL死锁了怎么办</a>
+          <ol>
+            <li><a href="#原因">原因</a></li>
+            <li><a href="#死锁避免">死锁避免</a></li>
+          </ol>
+        </li>
+      </ol>
+    </li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
