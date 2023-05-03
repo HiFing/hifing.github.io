@@ -3,7 +3,19 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://hifing.github.io/categories/</loc>
-    <lastmod>2023-04-29T17:59:47+08:00</lastmod>
+    <lastmod>2023-05-03T14:47:17+08:00</lastmod>
+  </url><url>
+    <loc>https://hifing.github.io/categories/mysql/</loc>
+    <lastmod>2023-05-03T14:47:17+08:00</lastmod>
+  </url><url>
+    <loc>https://hifing.github.io/p/mysql%E6%97%A5%E5%BF%97/</loc>
+    <lastmod>2023-05-03T14:47:17+08:00</lastmod>
+  </url><url>
+    <loc>https://hifing.github.io/post/</loc>
+    <lastmod>2023-05-03T14:47:17+08:00</lastmod>
+  </url><url>
+    <loc>https://hifing.github.io/</loc>
+    <lastmod>2023-05-03T14:47:17+08:00</lastmod>
   </url><url>
     <loc>https://hifing.github.io/categories/golang/</loc>
     <lastmod>2023-04-29T17:59:47+08:00</lastmod>
@@ -11,22 +23,10 @@
     <loc>https://hifing.github.io/p/golang%E5%9F%BA%E7%A1%80/</loc>
     <lastmod>2023-04-29T17:59:47+08:00</lastmod>
   </url><url>
-    <loc>https://hifing.github.io/post/</loc>
-    <lastmod>2023-04-29T17:59:47+08:00</lastmod>
-  </url><url>
-    <loc>https://hifing.github.io/</loc>
-    <lastmod>2023-04-29T17:59:47+08:00</lastmod>
-  </url><url>
-    <loc>https://hifing.github.io/categories/mysql/</loc>
-    <lastmod>2023-04-21T14:47:17+08:00</lastmod>
-  </url><url>
     <loc>https://hifing.github.io/p/mysql%E4%BA%8B%E5%8A%A1%E4%B8%8E%E9%94%81/</loc>
     <lastmod>2023-04-21T14:47:17+08:00</lastmod>
   </url><url>
     <loc>https://hifing.github.io/p/mysql%E5%9F%BA%E7%A1%80/</loc>
-    <lastmod>2023-04-21T14:47:17+08:00</lastmod>
-  </url><url>
-    <loc>https://hifing.github.io/p/mysql%E6%97%A5%E5%BF%97/</loc>
     <lastmod>2023-04-21T14:47:17+08:00</lastmod>
   </url><url>
     <loc>https://hifing.github.io/p/mysql%E7%B4%A2%E5%BC%95/</loc>

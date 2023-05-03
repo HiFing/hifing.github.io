@@ -6,21 +6,21 @@
         <description>Recent content in Categories on Welcome to Barry&#39;s Blog</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Sat, 29 Apr 2023 17:59:47 +0800</lastBuildDate><atom:link href="https://hifing.github.io/categories/index.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Wed, 03 May 2023 14:47:17 +0800</lastBuildDate><atom:link href="https://hifing.github.io/categories/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>MySQL</title>
+        <link>https://hifing.github.io/categories/mysql/</link>
+        <pubDate>Wed, 03 May 2023 14:47:17 +0800</pubDate>
+        
+        <guid>https://hifing.github.io/categories/mysql/</guid>
+        <description>&lt;img src="https://hifing.github.io/categories/mysql/OIP-C.jpg" alt="Featured image of post MySQL" /&gt;</description>
+        </item>
+        <item>
         <title>Golang</title>
         <link>https://hifing.github.io/categories/golang/</link>
         <pubDate>Sat, 29 Apr 2023 17:59:47 +0800</pubDate>
         
         <guid>https://hifing.github.io/categories/golang/</guid>
         <description>&lt;img src="https://hifing.github.io/categories/golang/download.jpg" alt="Featured image of post Golang" /&gt;</description>
-        </item>
-        <item>
-        <title>MySQL</title>
-        <link>https://hifing.github.io/categories/mysql/</link>
-        <pubDate>Fri, 21 Apr 2023 14:47:17 +0800</pubDate>
-        
-        <guid>https://hifing.github.io/categories/mysql/</guid>
-        <description>&lt;img src="https://hifing.github.io/categories/mysql/OIP-C.jpg" alt="Featured image of post MySQL" /&gt;</description>
         </item>
         <item>
         <title>刷题</title>

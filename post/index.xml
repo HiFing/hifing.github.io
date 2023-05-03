@@ -6,7 +6,173 @@
         <description>Recent content in Posts on Welcome to Barry&#39;s Blog</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Sat, 29 Apr 2023 17:59:47 +0800</lastBuildDate><atom:link href="https://hifing.github.io/post/index.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Wed, 03 May 2023 14:47:17 +0800</lastBuildDate><atom:link href="https://hifing.github.io/post/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>MySQL日志</title>
+        <link>https://hifing.github.io/p/mysql%E6%97%A5%E5%BF%97/</link>
+        <pubDate>Wed, 03 May 2023 14:47:17 +0800</pubDate>
+        
+        <guid>https://hifing.github.io/p/mysql%E6%97%A5%E5%BF%97/</guid>
+        <description>&lt;h1 id=&#34;mysql日志&#34;&gt;MySQL日志&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;undo log（回滚日志）：用于实现事务原子性、MVCC（ReadView + undo log）。&lt;/li&gt;
+&lt;li&gt;redo log（重做日志）：用于实现事务的持久性、数据掉电恢复。&lt;/li&gt;
+&lt;li&gt;binlog（归档日志）：数据备份、主从同步。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;undo-log&#34;&gt;undo log&lt;/h2&gt;
+&lt;p&gt;一条记录的每一次更新操作产生的 undo log 格式都有一个 roll_pointer 指针和一个 trx_id 事务id：&lt;/p&gt;
+&lt;div style=&#34;text-align:center&#34;&gt;&lt;img width=500px src=../../assets/img/版本链.webp /&gt;&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;通过 trx_id 可以知道该记录是被哪个事务修改的；&lt;/li&gt;
+&lt;li&gt;通过 roll_pointer 指针可以将这些 undo log 串成一个链表，这个链表就被称为&lt;strong&gt;版本链&lt;/strong&gt;；&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;TIP&lt;/p&gt;
+&lt;p&gt;undo log刷盘和数据页的刷盘逻辑是一样的，通过redo log保证数据持久化.
+&lt;strong&gt;buffer pool 中有 undo 页&lt;/strong&gt;，对 undo 页的修改也都会记录到 redo log。redo log 会每秒刷盘，提交事务时也会刷盘，数据页和 undo 页都是靠这个机制保证持久化的。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;buffer-pool&#34;&gt;buffer pool&lt;/h2&gt;
+&lt;p&gt;buffer pool所在的位置：&lt;/p&gt;
+&lt;div style=&#34;text-align:center&#34;&gt;&lt;img width=250px src=../../assets/img/缓冲池.drawio.webp /&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://xiaolincoding.com/mysql/buffer_pool/buffer_pool.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;buffer pool结构&lt;/a&gt;：&lt;/p&gt;
+&lt;div style=&#34;text-align:center&#34;&gt;&lt;img width=450px src=../../assets/img/bufferpool内容.drawio.webp /&gt;&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;当修改数据时，如果数据存在于 Buffer Pool 中，那直接修改 Buffer Pool 中数据所在的页，然后将其页设置为脏页（该页的内存数据和磁盘上的数据已经不一致），为了减少磁盘I/O，不会立即将脏页写入磁盘，&lt;strong&gt;后续由后台线程选择一个合适的时机将脏页写入到磁盘&lt;/strong&gt;。这就是 &lt;strong&gt;WAL （Write-Ahead Logging）技术&lt;/strong&gt;。&lt;/li&gt;
+&lt;li&gt;开启事务后，InnoDB 层更新记录前，首先要记录相应的 undo log，如果是更新操作，需要把被更新的列的旧值记下来，也就是要生成一条 undo log，undo log 会写入 Buffer Pool 中的 Undo 页面。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;redo-log&#34;&gt;redo log&lt;/h2&gt;
+&lt;h3 id=&#34;为什么要redo-log&#34;&gt;为什么要redo log&lt;/h3&gt;
+&lt;p&gt;Buffer Pool 是提高了读写效率没错，但是问题来了，Buffer Pool 是基于内存的，而内存总是不可靠，万一断电重启，还没来得及落盘的脏页数据就会丢失。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;为了防止断电导致数据丢失的问题&lt;/strong&gt;，当有一条记录需要更新的时候，InnoDB 引擎就会先更新内存（同时标记为脏页），然后将本次对这个页的修改以 redo log 的形式记录下来，这个时候更新就算完成了。&lt;/p&gt;
+&lt;div style=&#34;text-align:center&#34;&gt;&lt;img width=500px src=../../assets/img/wal.webp /&gt;&lt;/div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;TIP&lt;/p&gt;
+&lt;p&gt;被修改 Undo 页面，需要记录对应 redo log：
+开启事务后，InnoDB 层更新记录前，首先要记录相应的 undo log，如果是更新操作，需要把被更新的列的旧值记下来，也就是要生成一条 undo log，undo log 会写入 Buffer Pool 中的 Undo 页面。
+不过，在内存修改该 Undo 页面后，需要记录对应的 redo log。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;写入 redo log 的方式使用了&lt;strong&gt;追加&lt;/strong&gt;操作， 所以磁盘操作是&lt;strong&gt;顺序写&lt;/strong&gt;，而写入数据需要先找到写入位置，然后才写到磁盘，所以磁盘操作是随机写。
+磁盘的「顺序写 」比「随机写」 高效的多，因此 redo log 写入磁盘的开销更小。&lt;/p&gt;
+&lt;h3 id=&#34;redo-log持久化机制&#34;&gt;redo log持久化机制&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;主要有下面几个时机：
+&lt;ul&gt;
+&lt;li&gt;MySQL 正常关闭时；&lt;/li&gt;
+&lt;li&gt;当 redo log buffer 中记录的写入量大于 redo log buffer 内存空间的一半时，会触发落盘；&lt;/li&gt;
+&lt;li&gt;InnoDB 的后台线程每隔 1 秒，将 redo log buffer 持久化到磁盘。&lt;/li&gt;
+&lt;li&gt;每次事务提交时都将缓存在 redo log buffer 里的 redo log 直接持久化到磁盘（这个策略可由 innodb_flush_log_at_trx_commit 参数控制，下面会说）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;如何通过&lt;code&gt;innodb_flush_log_at_trx_commit&lt;/code&gt;进行刷盘时机控制：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://hifing.github.io/assets/img/innodb_flush_log_at_trx_commit.drawio.webp&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;redo log持久化机制1&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;TIP&lt;/p&gt;
+&lt;p&gt;InnoDB 的后台线程每隔 1 秒：&lt;/p&gt;
+&lt;p&gt;针对参数 0 ：会把缓存在 redo log buffer 中的 redo log ，通过调用 write() 写到操作系统的 Page Cache，然后调用 fsync() 持久化到磁盘。所以参数为 0 的策略，MySQL 进程的崩溃会导致上一秒钟所有事务数据的丢失;&lt;/p&gt;
+&lt;p&gt;针对参数 2 ：调用 fsync，将缓存在操作系统中 Page Cache 里的 redo log 持久化到磁盘。所以参数为 2 的策略，较取值为 0 情况下更安全，因为 MySQL 进程的崩溃并不会丢失数据，&lt;strong&gt;只有在操作系统崩溃或者系统断电的情况下&lt;/strong&gt;，上一秒钟所有事务数据才可能丢失。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://hifing.github.io/assets/img/innodb_flush_log_at_trx_commit2.drawio.webp&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;redo log持久化机制2&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;redo-log-写满了怎么办&#34;&gt;redo log 写满了怎么办&lt;/h3&gt;
+&lt;p&gt;redo log 是循环写的方式，相当于一个环形，InnoDB 用 write pos 表示 redo log 当前记录写到的位置，用 checkpoint 表示当前要擦除的位置：&lt;/p&gt;
+&lt;div style=&#34;text-align:center&#34;&gt;&lt;img width=450px src=../../assets/img/checkpoint.webp /&gt;&lt;/div&gt;
+&lt;p&gt;如果 write pos 追上了 checkpoint，就意味着 redo log 文件满了，这时 MySQL 不能再执行新的更新操作，也就是说 &lt;strong&gt;MySQL 会被阻塞&lt;/strong&gt;（因此所以针对并发量大的系统，适当设置 redo log 的文件大小非常重要），此时会停下来将 Buffer Pool 中的&lt;strong&gt;脏页刷新到磁盘&lt;/strong&gt;中，然后标记 redo log 哪些记录可以被擦除，接着对旧的 redo log 记录进行擦除，等擦除完旧记录腾出了空间，checkpoint 就会往后移动（图中顺时针），然后 MySQL 恢复正常运行，继续执行新的更新操作。&lt;/p&gt;
+&lt;h2 id=&#34;binlog&#34;&gt;binlog&lt;/h2&gt;
+&lt;p&gt;MySQL 在完成一条更新操作后，&lt;strong&gt;Server 层&lt;/strong&gt;还会生成一条 binlog，等之后&lt;strong&gt;事务提交的时候&lt;/strong&gt;，会将该事物执行过程中产生的所有 binlog 统一写 入 binlog 文件。&lt;/p&gt;
+&lt;h3 id=&#34;redo-log-和-binlog的比较&#34;&gt;redo log 和 binlog的比较&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;binlog 是 MySQL 的 Server 层实现的日志，所有存储引擎都可以使用；redo log 是 Innodb 存储引擎实现的日志；&lt;/li&gt;
+&lt;li&gt;binlog 有 3 种格式类型，分别是 STATEMENT（默认格式，相当于记录逻辑操作）、ROW、 MIXED。（STATEMENT 有动态函数的问题）
+redo log 是物理日志，记录的是在某个数据页做了什么修改；&lt;/li&gt;
+&lt;li&gt;binlog 是追加写，写满一个文件，就创建一个新的文件继续写，不会覆盖以前的日志，保存的是&lt;strong&gt;全量&lt;/strong&gt;的日志。redo log 是循环写，日志空间大小是固定。&lt;/li&gt;
+&lt;li&gt;binlog 用于备份恢复、主从复制；redo log 用于掉电等故障恢复。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;主从复制&#34;&gt;主从复制&lt;/h3&gt;
+&lt;div style=&#34;text-align:center&#34;&gt;&lt;img width=450px src=../../assets/img/主从复制过程.drawio.webp /&gt;&lt;/div&gt;
+在完成主从复制之后，可以在写数据时只写主库，在读数据时只读从库，这样即使写请求会锁表或者锁记录，也不会影响读请求的执行。
+&lt;p&gt;主从复制模型：同步、异步（默认）、半同步（半数复制成功即认为成功）&lt;/p&gt;
+&lt;h3 id=&#34;刷盘时机&#34;&gt;刷盘时机&lt;/h3&gt;
+&lt;p&gt;事务执行过程中，先把日志写到 binlog cache（Server 层的 cache），&lt;strong&gt;事务提交的时候，再把 binlog cache 写到 binlog 文件中&lt;/strong&gt;。&lt;/p&gt;
+&lt;div style=&#34;text-align:center&#34;&gt;&lt;img width=450px src=../../assets/img/binlogcache.drawio.webp /&gt;&lt;/div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;MySQL提供一个 sync_binlog 参数来控制数据库的 binlog 刷到磁盘上的频率：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;sync_binlog = 0 的时候，表示每次提交事务都只 write，不 fsync，后续交由操作系统决定何时将数据持久化到磁盘；&lt;/li&gt;
+&lt;li&gt;sync_binlog = 1 的时候，表示每次提交事务都会 write，然后马上执行 fsync；&lt;/li&gt;
+&lt;li&gt;sync_binlog =N(N&amp;gt;1) 的时候，表示每次提交事务都 write，但累积 N 个事务后才 fsync。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://xiaolincoding.com/os/6_file_system/pagecache.html#page-cache&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;page cache介绍&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;一个update语句的执行流程从日志角度看&#34;&gt;一个update语句的执行流程（从日志角度看）&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;UPDATE t_user SET name = &#39;xiaolin&#39; WHERE id = 1; &lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;执行器负责具体执行，会调用存储引擎的接口，通过主键索引树搜索获取 id = 1 这一行记录：如果数据在buffer pool中，则直接返回给执行器，否则从磁盘加载数据页到pool中；&lt;/li&gt;
+&lt;li&gt;执行器得到聚簇索引记录后，会看一下更新前的记录和更新后的记录是否一样：一样的话就不用执行了，否则交给引擎层去处理；&lt;/li&gt;
+&lt;li&gt;开启事务，记录undo log，写入buffer pool的undo log页，同时记录redo log；&lt;/li&gt;
+&lt;li&gt;更新内存数据，标记为脏页，记录redo log，不直接将脏页刷盘，等待合适的时机再将脏页数据持久化；&lt;/li&gt;
+&lt;li&gt;语句执行完毕后，记录binlog，将binlog保存到binlog cache中，等待事务提交后（涉及两阶段提交）将binlog cache中的数据刷盘。&lt;/li&gt;
+&lt;li&gt;事务提交（两阶段提交为例）：
+&lt;ul&gt;
+&lt;li&gt;prepare 阶段：将 redo log 对应的事务状态设置为 prepare，然后将 redo log 刷新到硬盘；&lt;/li&gt;
+&lt;li&gt;commit 阶段：将 binlog 刷新到磁盘，接着调用引擎的提交事务接口，将 redo log 状态设置为 commit（将事务设置为 commit 状态后，刷入到磁盘 redo log 文件，更新redo log commit阶段标记）；&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;两阶段提交&#34;&gt;两阶段提交&lt;/h2&gt;
+&lt;div style=&#34;text-align:center&#34;&gt;&lt;img width=500px src=../../assets/img/两阶段提交.drawio.webp /&gt;&lt;/div&gt;
+&lt;h3 id=&#34;为什么需要两阶段提交&#34;&gt;为什么需要两阶段提交&lt;/h3&gt;
+&lt;p&gt;事务提交后，redo log 和 binlog 都要持久化到磁盘，但是这两个是独立的逻辑，可能出现&lt;strong&gt;半成功的状态&lt;/strong&gt;，这样就造成两份日志之间的逻辑不一致。&lt;/p&gt;
+&lt;h3 id=&#34;过程&#34;&gt;过程&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;prepare 阶段：将 XID（内部 XA 事务的 ID） 写入到 redo log，同时将 redo log 对应的事务状态设置为 prepare，然后将 redo log 持久化到磁盘（innodb_flush_log_at_trx_commit = 1 的作用）；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;commit 阶段：把 XID 写入到 binlog，然后将 binlog 持久化到磁盘（sync_binlog = 1 的作用），接着调用引擎的提交事务接口，将 redo log 状态设置为 commit，此时该状态并不需要持久化到磁盘，只需要 write 到文件系统的 page cache 中就够了，因为只要 binlog 写磁盘成功，就算 redo log 的状态还是 prepare 也没有关系，一样会被认为事务已经执行成功；&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;TIP&lt;/p&gt;
+&lt;p&gt;事务没提交的时候，redo log 可能会被持久化到磁盘：
+事务执行中间过程的 redo log 也是直接写在 redo log buffer 中的，这些缓存在 redo log buffer 里的 redo log 也会被「后台线程」每隔一秒一起持久化到磁盘。
+也就是说，事务没提交的时候，redo log 也是可能被持久化到磁盘的。但是，若binlog还没刷盘，则还是认为事务失败，日志需要回滚。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;两阶段提交的缺点&#34;&gt;两阶段提交的缺点&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;磁盘I/O压力大
+&lt;ul&gt;
+&lt;li&gt;使用&lt;a class=&#34;link&#34; href=&#34;https://xiaolincoding.com/mysql/log/how_update.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;组提交&lt;/a&gt;可以减少I/O次数&lt;/li&gt;
+&lt;li&gt;将 sync_binlog 设置为大于 1 的值（比较常见是 100~1000），表示每次提交事务都 write，但累积 N 个事务后才 fsync。&lt;/li&gt;
+&lt;li&gt;将 innodb_flush_log_at_trx_commit 设置为 2，由OS决定page cache的刷盘时机。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;锁竞争激烈&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://zhuanlan.zhihu.com/p/263555694&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;拓展阅读：分布式事务&lt;/a&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>Golang基础</title>
         <link>https://hifing.github.io/p/golang%E5%9F%BA%E7%A1%80/</link>
         <pubDate>Sat, 29 Apr 2023 17:59:47 +0800</pubDate>
@@ -373,14 +539,6 @@ InnoDB 引擎是支持行级锁的，而 MyISAM 引擎并不支持行级锁。
 &lt;/li&gt;
 &lt;/ul&gt;
 </description>
-        </item>
-        <item>
-        <title>MySQL日志</title>
-        <link>https://hifing.github.io/p/mysql%E6%97%A5%E5%BF%97/</link>
-        <pubDate>Fri, 21 Apr 2023 14:47:17 +0800</pubDate>
-        
-        <guid>https://hifing.github.io/p/mysql%E6%97%A5%E5%BF%97/</guid>
-        <description></description>
         </item>
         <item>
         <title>MySQL索引</title>
