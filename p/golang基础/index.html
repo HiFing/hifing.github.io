@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="en-us" dir="ltr">
     <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Golang基础 基础知识合集 unsafe：Unsafe code是一种绕过go类型安全和内存安全检查的Go代码。大多数情况，unsafe code是和指针相关的。 刷题相关 golang堆实现：
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 //小顶堆Demo import ( &amp;#34;container/heap&amp;#34; &amp;#34;fmt&amp;#34; ) type ListNode struct { Val int Next *ListNode } type NodeHeap []*ListNode func (nh NodeHeap) Less(i, j int) bool { return nh[i].'><title>Golang基础</title>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Golang基础 基础知识合集 unsafe Unsafe code是一种绕过go类型安全和内存安全检查的Go代码。大多数情况，unsafe code是和指针相关的。
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 func main() { array := [...]int{1, 2, 3, 4, 5} ptr := &amp;amp;array[0] baseAddr := uintptr(unsafe.Pointer(ptr)) for i := 0; i &amp;lt; len(array)-1; i&#43;&#43; { baseAddr &#43;= unsafe.Sizeof(array[0]) ptr := (*int)(unsafe.Pointer(baseAddr)) fmt.Println(*ptr) } baseAddr &#43;= (unsafe.Sizeof(array[0]) &#43; unsafe.Sizeof(array[0]) &#43; unsafe.Sizeof(array[0])) &#43; unsafe.Sizeof(array[0]) ptr = (*int)(unsafe.Pointer(baseAddr)) fmt.'><title>Golang基础</title>
 
 <link rel='canonical' href='https://hifing.github.io/p/golang%E5%9F%BA%E7%A1%80/'>
 
 <link rel="stylesheet" href="/scss/style.min.ac77dcf8b111b51da39a92990f431923f210f3876d85798a2125667f96dc33a4.css"><meta property='og:title' content='Golang基础'>
-<meta property='og:description' content='Golang基础 基础知识合集 unsafe：Unsafe code是一种绕过go类型安全和内存安全检查的Go代码。大多数情况，unsafe code是和指针相关的。 刷题相关 golang堆实现：
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 //小顶堆Demo import ( &amp;#34;container/heap&amp;#34; &amp;#34;fmt&amp;#34; ) type ListNode struct { Val int Next *ListNode } type NodeHeap []*ListNode func (nh NodeHeap) Less(i, j int) bool { return nh[i].'>
+<meta property='og:description' content='Golang基础 基础知识合集 unsafe Unsafe code是一种绕过go类型安全和内存安全检查的Go代码。大多数情况，unsafe code是和指针相关的。
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 func main() { array := [...]int{1, 2, 3, 4, 5} ptr := &amp;amp;array[0] baseAddr := uintptr(unsafe.Pointer(ptr)) for i := 0; i &amp;lt; len(array)-1; i&#43;&#43; { baseAddr &#43;= unsafe.Sizeof(array[0]) ptr := (*int)(unsafe.Pointer(baseAddr)) fmt.Println(*ptr) } baseAddr &#43;= (unsafe.Sizeof(array[0]) &#43; unsafe.Sizeof(array[0]) &#43; unsafe.Sizeof(array[0])) &#43; unsafe.Sizeof(array[0]) ptr = (*int)(unsafe.Pointer(baseAddr)) fmt.'>
 <meta property='og:url' content='https://hifing.github.io/p/golang%E5%9F%BA%E7%A1%80/'>
 <meta property='og:site_name' content='Welcome to Barry&#39;s Blog'>
 <meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2023-04-29T17:59:47&#43;08:00'/><meta property='article:modified_time' content='2023-04-29T17:59:47&#43;08:00'/>
 <meta name="twitter:title" content="Golang基础">
-<meta name="twitter:description" content="Golang基础 基础知识合集 unsafe：Unsafe code是一种绕过go类型安全和内存安全检查的Go代码。大多数情况，unsafe code是和指针相关的。 刷题相关 golang堆实现：
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 //小顶堆Demo import ( &amp;#34;container/heap&amp;#34; &amp;#34;fmt&amp;#34; ) type ListNode struct { Val int Next *ListNode } type NodeHeap []*ListNode func (nh NodeHeap) Less(i, j int) bool { return nh[i].">
+<meta name="twitter:description" content="Golang基础 基础知识合集 unsafe Unsafe code是一种绕过go类型安全和内存安全检查的Go代码。大多数情况，unsafe code是和指针相关的。
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 func main() { array := [...]int{1, 2, 3, 4, 5} ptr := &amp;amp;array[0] baseAddr := uintptr(unsafe.Pointer(ptr)) for i := 0; i &amp;lt; len(array)-1; i&#43;&#43; { baseAddr &#43;= unsafe.Sizeof(array[0]) ptr := (*int)(unsafe.Pointer(baseAddr)) fmt.Println(*ptr) } baseAddr &#43;= (unsafe.Sizeof(array[0]) &#43; unsafe.Sizeof(array[0]) &#43; unsafe.Sizeof(array[0])) &#43; unsafe.Sizeof(array[0]) ptr = (*int)(unsafe.Pointer(baseAddr)) fmt.">
     </head>
     <body class="
     article-page
@@ -257,7 +257,7 @@
 
 
                 <time class="article-time--reading">
-                    1 minute read
+                    5 minute read
                 </time>
             </div>
         
@@ -273,10 +273,597 @@
     
     <h1 id="golang基础">Golang基础</h1>
 <h2 id="基础知识合集">基础知识合集</h2>
+<h3 id="unsafe">unsafe</h3>
+<p>Unsafe code是一种绕过go类型安全和内存安全检查的Go代码。大多数情况，unsafe code是和指针相关的。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">array</span> <span class="o">:=</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="kt">int</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">ptr</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">baseAddr</span> <span class="o">:=</span> <span class="nb">uintptr</span><span class="p">(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="nx">ptr</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="nx">array</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">baseAddr</span> <span class="o">+=</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nf">Sizeof</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">ptr</span> <span class="o">:=</span> <span class="p">(</span><span class="o">*</span><span class="kt">int</span><span class="p">)(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="nx">baseAddr</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="o">*</span><span class="nx">ptr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">baseAddr</span> <span class="o">+=</span> <span class="p">(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Sizeof</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nf">Sizeof</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nf">Sizeof</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">+</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nf">Sizeof</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">ptr</span> <span class="p">=</span> <span class="p">(</span><span class="o">*</span><span class="kt">int</span><span class="p">)(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="nx">baseAddr</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="o">*</span><span class="nx">ptr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl"><span class="mi">2</span>
+</span></span><span class="line"><span class="cl"><span class="mi">3</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4</span>
+</span></span><span class="line"><span class="cl"><span class="mi">5</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4307106152</span> <span class="c1">// a random number, 超过范围后输出了一些不可预料的值
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="go与c语言互调的方式">Go与C语言互调的方式</h3>
+<h4 id="c中调用go代码">C中调用Go代码</h4>
 <ul>
-<li>unsafe：Unsafe code是一种绕过go类型安全和内存安全检查的Go代码。大多数情况，unsafe code是和指针相关的。</li>
+<li>在Go文件中编写好被调用的代码
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">//导入&#34;C&#34;包
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kn">import</span> <span class="s">&#34;C&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="s">&#34;fmt&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//加export注释后才能被识别，注意斜杠和export之间没有空格！
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">//export PrintMsg 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">PrintMsg</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;Let&#39;s Go!&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//export Mul
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">Mul</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="nx">a</span> <span class="o">*</span> <span class="nx">b</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li><code>go build -o usedByC.o -buildmode=c-shared usedByC.go</code>
+执行完成后会有<code>.h</code>文件和<code>.o</code>文件。</li>
+<li>使用导出的模块
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;usedByC.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">GoInt</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span> <span class="c1">//头文件中的定义：typedef GoInt64 GoInt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">GoInt</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">23</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;Call PrintMsg in C!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">PrintMsg</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="n">GoInt</span> <span class="n">p</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;Call Mul in C! The value is %d</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">p</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>生成二进制可执行文件并执行程序
+<code>gcc -o willUseGo willUseGo.c ./usedByC.o</code>
+<code>./willUseGo</code></li>
 </ul>
-<h2 id="刷题相关">刷题相关</h2>
+<h4 id="go中调用c代码">Go中调用C代码</h4>
+<ul>
+<li>代码嵌套
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl">  <span class="kn">package</span> <span class="nx">main</span>
+</span></span><span class="line"><span class="cl">  <span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">  // C 标志io头文件，你也可以使用里面提供的函数
+</span></span></span><span class="line"><span class="cl"><span class="cm">  #include &lt;stdio.h&gt;
+</span></span></span><span class="line"><span class="cl"><span class="cm">
+</span></span></span><span class="line"><span class="cl"><span class="cm">  void pri(){
+</span></span></span><span class="line"><span class="cl"><span class="cm">    printf(&#34;hey\n&#34;);
+</span></span></span><span class="line"><span class="cl"><span class="cm">  }
+</span></span></span><span class="line"><span class="cl"><span class="cm">
+</span></span></span><span class="line"><span class="cl"><span class="cm">  int add(int a,int b){
+</span></span></span><span class="line"><span class="cl"><span class="cm">    return a+b;
+</span></span></span><span class="line"><span class="cl"><span class="cm">  }
+</span></span></span><span class="line"><span class="cl"><span class="cm">  */</span>
+</span></span><span class="line"><span class="cl">  <span class="kn">import</span> <span class="s">&#34;C&#34;</span> <span class="c1">// 切勿换行再写这个
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="kn">import</span> <span class="s">&#34;fmt&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">C</span><span class="p">.</span><span class="nf">add</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">C</span><span class="p">.</span><span class="nf">pri</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>导入动态库（最安全、最麻烦）</li>
+<li>直接引用（其实就是将嵌套代码挂出去了，然后在go文件中嵌套少许引用代码即可，非常简洁）
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kn">package</span> <span class="nx">util</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">#include &#34;util.h&#34;
+</span></span></span><span class="line"><span class="cl"><span class="cm">*/</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="s">&#34;C&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Sum</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">s</span> <span class="o">:=</span> <span class="nx">C</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="nx">C</span><span class="p">.</span><span class="nb">int</span><span class="p">(</span><span class="nx">a</span><span class="p">),</span> <span class="nx">C</span><span class="p">.</span><span class="nb">int</span><span class="p">(</span><span class="nx">b</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="p">(</span><span class="kt">int</span><span class="p">)(</span><span class="nx">s</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div>在c文件这边：
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">sum</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span><span class="kt">int</span> <span class="n">b</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">//.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#include</span> <span class="cpf">&#34;util.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="kt">int</span> <span class="nf">sum</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">);</span> <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div>最后在main函数里：
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kn">package</span> <span class="nx">main</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">  <span class="s">&#34;fmt&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="s">&#34;barry.com/master/util&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">util</span><span class="p">.</span><span class="nf">Sum</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//输出：9
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<h3 id="deferpanicrecover">defer，panic，recover</h3>
+<ul>
+<li>
+<p>defer函数在外围函数返回之后，以后进先出(LIFO)的原则执行。</p>
+</li>
+<li>
+<p>使用defer语句时遇到的坑
+函数返回的过程是这样的：<strong>先给返回值赋值，然后调用defer表达式，最后才是返回到调用函数中</strong>。（因为：return xxx语句并不是一条原子指令）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">f</span><span class="p">()</span> <span class="p">(</span><span class="nx">r</span> <span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">t</span> <span class="o">:=</span> <span class="mi">5</span>
+</span></span><span class="line"><span class="cl">  <span class="k">defer</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">t</span> <span class="p">=</span> <span class="nx">t</span> <span class="o">+</span> <span class="mi">5</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}()</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="nx">t</span> <span class="c1">// 相当于 r=t; return;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// r:=t; t+=5; return r
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nf">f</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 输出：5
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">t1</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">  <span class="k">defer</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>  <span class="c1">//引用的外部参数会立刻被拷贝
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nx">i</span><span class="o">++</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 输出：0
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">t2</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">  <span class="k">defer</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>        <span class="c1">//函数被延迟执行
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}()</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">i</span><span class="o">++</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 输出：1
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>panic 只会保证当前 goroutine 中的 defer 代码一定会执行，其他 goroutine 中的 defer 代码不保证能执行。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">defer</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;goroutine1 invoke&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">defer</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;goroutine2 invoke&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">      <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">defer</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;goroutine3 invoke&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">panic</span><span class="p">(</span><span class="s">&#34;panic&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}()</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl"><span class="nx">goroutine1</span> <span class="nx">invoke</span>
+</span></span><span class="line"><span class="cl"><span class="nx">goroutine2</span> <span class="nx">invoke</span>
+</span></span><span class="line"><span class="cl"><span class="nx">goroutine3</span> <span class="nx">invoke</span>
+</span></span><span class="line"><span class="cl"><span class="nx">panic</span><span class="p">:</span> <span class="nx">panic</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nx">goroutine1</span> <span class="nx">invoke</span>
+</span></span><span class="line"><span class="cl"><span class="nx">goroutine3</span> <span class="nx">invoke</span>
+</span></span><span class="line"><span class="cl"><span class="nx">goroutine2</span> <span class="nx">invoke</span>
+</span></span><span class="line"><span class="cl"><span class="nx">panic</span><span class="p">:</span> <span class="nx">panic</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nx">goroutine3</span> <span class="nx">invoke</span>
+</span></span><span class="line"><span class="cl"><span class="nx">panic</span><span class="p">:</span> <span class="nx">panic</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>recover都是在当前的goroutine里进行捕获的，这就是说，对于创建goroutine的外层函数，如果goroutine内部发生panic并且内部没有用recover，外层函数是无法用recover来捕获的，这样会造成程序崩溃。（其他 goroutine 中的 defer 代码不保证能执行）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">defer</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span> <span class="c1">// 直接崩溃不执行
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;trying to stop main&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">c</span> <span class="o">:=</span> <span class="nb">recover</span><span class="p">();</span> <span class="nx">c</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;panic caught&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">defer</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;inner stopped&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}()</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">panic</span><span class="p">(</span><span class="s">&#34;OK?&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;OK, main stopped safely&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nx">inner</span> <span class="nx">stopped</span>
+</span></span><span class="line"><span class="cl"><span class="nx">panic</span><span class="p">:</span> <span class="nx">OK</span><span class="err">?</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nx">goroutine</span> <span class="mi">4</span> <span class="p">[</span><span class="nx">running</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl"><span class="nx">main</span><span class="p">.</span><span class="nx">main</span><span class="p">.</span><span class="nf">func2</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">xxx</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">20</span> <span class="o">+</span><span class="mh">0x48</span>
+</span></span><span class="line"><span class="cl"><span class="nx">created</span> <span class="nx">by</span> <span class="nx">main</span><span class="p">.</span><span class="nx">main</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">xxx</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">16</span> <span class="o">+</span><span class="mh">0x40</span>
+</span></span><span class="line"><span class="cl"><span class="nx">exit</span> <span class="nx">status</span> <span class="mi">2</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>recover返回的是interface{}类型而不是go中的 error 类型，如果外层函数需要调用err.Error()，会编译错误，也可能会在执行时panic。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">defer</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nb">recover</span><span class="p">();</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;捕获异常:&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">.(</span><span class="kt">error</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}()</span>
+</span></span><span class="line"><span class="cl">  <span class="nb">panic</span><span class="p">(</span><span class="s">&#34;a&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl"><span class="nx">panic</span><span class="p">:</span> <span class="nx">a</span> <span class="p">[</span><span class="nx">recovered</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">panic</span><span class="p">:</span> <span class="kd">interface</span> <span class="nx">conversion</span><span class="p">:</span> <span class="kt">string</span> <span class="nx">is</span> <span class="nx">not</span> <span class="kt">error</span><span class="p">:</span> <span class="nx">missing</span> <span class="nx">method</span> <span class="nx">Error</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<h3 id="闭包">闭包</h3>
+<p>todo</p>
+<h3 id="切片">切片</h3>
+<ul>
+<li>
+<p>Go方法传参为值传参，关于slice、map、chan的传参效果同引用传参相同的问题，主要是因为slice为一个struct，里面包含了一个底层数组的指针、len、cap，当传参为slice时，拷贝整个struct，其中，指针所指的底层数组不变，因此，在接受传参的方法中修改slice的底层数组会影响到外部slice的底层数组；map和chan的原理类似，都是指针类型，因此传参传的是地址。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// array := []int{7, 8, 9}
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">array</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">=</span> <span class="mi">7</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">array</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">=</span> <span class="mi">8</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">array</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">=</span> <span class="mi">9</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;main ap brfore: len: %d cap:%d data:%+v\n&#34;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">array</span><span class="p">),</span> <span class="nb">cap</span><span class="p">(</span><span class="nx">array</span><span class="p">),</span> <span class="nx">array</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ap</span><span class="p">(</span><span class="nx">array</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;main ap after: len: %d cap:%d data:%+v\n&#34;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">array</span><span class="p">),</span> <span class="nb">cap</span><span class="p">(</span><span class="nx">array</span><span class="p">),</span> <span class="nx">array</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">array</span> <span class="p">=</span> <span class="nx">array</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;main ap after: len: %d cap:%d data:%+v\n&#34;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">array</span><span class="p">),</span> <span class="nb">cap</span><span class="p">(</span><span class="nx">array</span><span class="p">),</span> <span class="nx">array</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">ap</span><span class="p">(</span><span class="nx">array</span> <span class="p">[]</span><span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;ap brfore:  len: %d cap:%d data:%+v\n&#34;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">array</span><span class="p">),</span> <span class="nb">cap</span><span class="p">(</span><span class="nx">array</span><span class="p">),</span> <span class="nx">array</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">array</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">array</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;ap after:   len: %d cap:%d data:%+v\n&#34;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">array</span><span class="p">),</span> <span class="nb">cap</span><span class="p">(</span><span class="nx">array</span><span class="p">),</span> <span class="nx">array</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">---</span>
+</span></span><span class="line"><span class="cl"><span class="nx">main</span> <span class="nx">ap</span> <span class="nx">brfore</span><span class="p">:</span> <span class="nx">len</span><span class="p">:</span> <span class="mi">3</span> <span class="nx">cap</span><span class="p">:</span><span class="mi">4</span> <span class="nx">data</span><span class="p">:[</span><span class="mi">7</span> <span class="mi">8</span> <span class="mi">9</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nx">ap</span> <span class="nx">brfore</span><span class="p">:</span>  <span class="nx">len</span><span class="p">:</span> <span class="mi">3</span> <span class="nx">cap</span><span class="p">:</span><span class="mi">4</span> <span class="nx">data</span><span class="p">:[</span><span class="mi">7</span> <span class="mi">8</span> <span class="mi">9</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nx">ap</span> <span class="nx">after</span><span class="p">:</span>   <span class="nx">len</span><span class="p">:</span> <span class="mi">4</span> <span class="nx">cap</span><span class="p">:</span><span class="mi">4</span> <span class="nx">data</span><span class="p">:[</span><span class="mi">1</span> <span class="mi">8</span> <span class="mi">9</span> <span class="mi">10</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nx">main</span> <span class="nx">ap</span> <span class="nx">after</span><span class="p">:</span> <span class="nx">len</span><span class="p">:</span> <span class="mi">3</span> <span class="nx">cap</span><span class="p">:</span><span class="mi">4</span> <span class="nx">data</span><span class="p">:[</span><span class="mi">1</span> <span class="mi">8</span> <span class="mi">9</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nx">main</span> <span class="nx">ap</span> <span class="nx">after</span><span class="p">:</span> <span class="nx">len</span><span class="p">:</span> <span class="mi">4</span> <span class="nx">cap</span><span class="p">:</span><span class="mi">4</span> <span class="nx">data</span><span class="p">:[</span><span class="mi">1</span> <span class="mi">8</span> <span class="mi">9</span> <span class="mi">10</span><span class="p">]</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><a class="link" href="https://segmentfault.com/a/1190000037763005"  target="_blank" rel="noopener"
+    >java - go语言参数传递到底是传值还是传引用？ - 个人文章 - SegmentFault 思否</a></p>
+</li>
+</ul>
+<h2 id="go并发编程">Go并发编程</h2>
+<h3 id="开源包ants学习">开源包ants学习</h3>
+<h2 id="leetcode刷题相关">Leetcode刷题相关</h2>
 <ul>
 <li>
 <p>golang堆实现：</p>
@@ -535,8 +1122,26 @@
         <div class="widget--toc">
             <nav id="TableOfContents">
   <ol>
-    <li><a href="#基础知识合集">基础知识合集</a></li>
-    <li><a href="#刷题相关">刷题相关</a></li>
+    <li><a href="#基础知识合集">基础知识合集</a>
+      <ol>
+        <li><a href="#unsafe">unsafe</a></li>
+        <li><a href="#go与c语言互调的方式">Go与C语言互调的方式</a>
+          <ol>
+            <li><a href="#c中调用go代码">C中调用Go代码</a></li>
+            <li><a href="#go中调用c代码">Go中调用C代码</a></li>
+          </ol>
+        </li>
+        <li><a href="#deferpanicrecover">defer，panic，recover</a></li>
+        <li><a href="#闭包">闭包</a></li>
+        <li><a href="#切片">切片</a></li>
+      </ol>
+    </li>
+    <li><a href="#go并发编程">Go并发编程</a>
+      <ol>
+        <li><a href="#开源包ants学习">开源包ants学习</a></li>
+      </ol>
+    </li>
+    <li><a href="#leetcode刷题相关">Leetcode刷题相关</a></li>
   </ol>
 </nav>
         </div>
